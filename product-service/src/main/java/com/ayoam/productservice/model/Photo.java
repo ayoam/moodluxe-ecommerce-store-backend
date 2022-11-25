@@ -14,7 +14,7 @@ public class Photo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long photoId;
     @NotNull
-    @Column(length = 65535)
+    @Column(columnDefinition="TEXT")
     private String photo;
     @NotNull
     private String extension;

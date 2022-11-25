@@ -9,6 +9,7 @@ import com.ayoam.productservice.model.Brand;
 import com.ayoam.productservice.model.Category;
 import com.ayoam.productservice.model.Photo;
 import com.ayoam.productservice.model.Product;
+import com.ayoam.productservice.query.ProductPredicateBuilder;
 import com.ayoam.productservice.repository.BrandRepository;
 import com.ayoam.productservice.repository.CategoryRepository;
 import com.ayoam.productservice.repository.PhotoRepository;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import com.querydsl.core.types.Predicate;
 
 @Service
 public class ProductService {
@@ -45,16 +47,23 @@ public class ProductService {
     }
 
     public AllProductsResponse getAllProducts(Map<String,String> filters, HttpServletResponse response){
-        Sort sortBy = switch (filters.get("sort")) {
-            case "nameAsc" -> Sort.by(Sort.Direction.ASC, "libelle");
-            case "nameDesc" -> Sort.by(Sort.Direction.DESC, "libelle");
-            case "priceAsc" -> Sort.by(Sort.Direction.ASC, "originalPrice");
-            case "priceDesc" -> Sort.by(Sort.Direction.DESC, "discountPrice");
-            default -> Sort.by(Sort.Direction.ASC, "idp");
-        };
-        Pageable pages = PageRequest.of(Integer.parseInt(filters.get("page")),Integer.parseInt(filters.get("limit")), sortBy);
+        Sort sortBy = filters.get("sort")!=null ?
+            switch (filters.get("sort")) {
+                case "nameAsc" -> Sort.by(Sort.Direction.ASC, "libelle");
+                case "nameDesc" -> Sort.by(Sort.Direction.DESC, "libelle");
+                case "priceAsc" -> Sort.by(Sort.Direction.ASC, "originalPrice");
+                case "priceDesc" -> Sort.by(Sort.Direction.DESC, "discountPrice");
+                default -> Sort.by(Sort.Direction.ASC, "idp");
+            }
+            :
+            Sort.by(Sort.Direction.ASC, "idp");
+
+
+        Pageable pages = PageRequest.of(Integer.parseInt(filters.get("page")),Integer.parseInt(filters.get("limit")),sortBy);
+        Predicate predicate = ProductPredicateBuilder.productFilters(filters);
         AllProductsResponse res = new AllProductsResponse();
-        res.setProductList(productRepository.findAll(pages).getContent());
+        res.setProductList(productRepository.findAll(predicate,pages).getContent());
+
         return res;
     }
 
