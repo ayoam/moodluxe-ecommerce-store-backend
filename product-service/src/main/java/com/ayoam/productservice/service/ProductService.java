@@ -14,6 +14,7 @@ import com.ayoam.productservice.repository.BrandRepository;
 import com.ayoam.productservice.repository.CategoryRepository;
 import com.ayoam.productservice.repository.PhotoRepository;
 import com.ayoam.productservice.repository.ProductRepository;
+import com.google.common.collect.Iterators;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,7 @@ public class ProductService {
                 case "nameAsc" -> Sort.by(Sort.Direction.ASC, "libelle");
                 case "nameDesc" -> Sort.by(Sort.Direction.DESC, "libelle");
                 case "priceAsc" -> Sort.by(Sort.Direction.ASC, "originalPrice");
-                case "priceDesc" -> Sort.by(Sort.Direction.DESC, "discountPrice");
+                case "priceDesc" -> Sort.by(Sort.Direction.DESC, "originalPrice");
                 default -> Sort.by(Sort.Direction.ASC, "idp");
             }
             :
@@ -63,6 +64,14 @@ public class ProductService {
         Predicate predicate = ProductPredicateBuilder.productFilters(filters);
         AllProductsResponse res = new AllProductsResponse();
         res.setProductList(productRepository.findAll(predicate,pages).getContent());
+
+        int count= Iterators.size(productRepository.findAll(predicate).iterator());
+
+        int minPrice = productRepository.minPrice();
+        int maxPrice = productRepository.maxPrice();
+        res.setMinPrice(minPrice);
+        res.setMaxPrice(maxPrice);
+        res.setTotalCount(count);
 
         return res;
     }

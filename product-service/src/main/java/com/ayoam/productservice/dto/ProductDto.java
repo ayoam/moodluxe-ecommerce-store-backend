@@ -18,7 +18,6 @@ public class ProductDto {
     private String description;
     @NotNull
     private Double originalPrice;
-    @NotNull
     private Double discountPrice=null;
     @NotNull
     private int quantity;
