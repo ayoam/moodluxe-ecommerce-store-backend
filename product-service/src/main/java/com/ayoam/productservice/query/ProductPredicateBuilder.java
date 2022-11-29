@@ -28,12 +28,15 @@ public class ProductPredicateBuilder {
 
 
         //Brands filters
-        List<String> brandsList = filters.get("brand")!=null ?
-                (new ArrayList<String>(Arrays.asList(filters.get("brand").split(",")))).stream().map(item -> item.toLowerCase()).toList()
-                :
-                new ArrayList<>();
+        List<String> brandsList = null;
 
-        if(brandsList.size()>0){
+        if(filters.get("brand")!=null){
+            if(!filters.get("brand").isEmpty()){
+                brandsList = (new ArrayList<String>(Arrays.asList(filters.get("brand").split(",")))).stream().map(item -> item.toLowerCase()).toList();
+            }
+        }
+
+        if(brandsList!=null){
             where.and(product.brand.name.in(brandsList));
         }
 

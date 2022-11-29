@@ -30,7 +30,6 @@ public class Product {
     private String description;
     @NotNull
     private Double originalPrice;
-    @NotNull
     private Double discountPrice;
     @NotNull
     private int quantity;

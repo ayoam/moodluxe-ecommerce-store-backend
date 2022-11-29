@@ -10,4 +10,7 @@ import java.util.List;
 public class AllProductsResponse {
     @JsonProperty("data")
     private List<Product> productList;
+    private int totalCount;
+    private int minPrice;
+    private int maxPrice;
 }
