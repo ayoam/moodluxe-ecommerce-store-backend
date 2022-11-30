@@ -1,17 +1,25 @@
 package com.ayoam.productservice.query;
 
+import com.ayoam.productservice.model.QCategory;
 import com.ayoam.productservice.model.QProduct;
+import com.ayoam.productservice.repository.CategoryRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class ProductPredicateBuilder {
     public static Predicate productFilters(Map<String,String> filters){
+
         QProduct product = QProduct.product;
+        QCategory category = QCategory.category;
+
         BooleanBuilder where = new BooleanBuilder();
 
         //Price filters
@@ -38,6 +46,13 @@ public class ProductPredicateBuilder {
 
         if(brandsList!=null){
             where.and(product.brand.name.in(brandsList));
+        }
+
+        //category filter
+        if(filters.get("category")!=null){
+            if(!filters.get("category").isEmpty()) {
+                where.and(product.categoryList.any().name.eq(filters.get("category").replace('-', ' ')));
+            }
         }
 
         return where;
