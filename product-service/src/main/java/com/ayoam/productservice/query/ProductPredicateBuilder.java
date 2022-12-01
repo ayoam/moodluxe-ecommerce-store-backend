@@ -55,6 +55,13 @@ public class ProductPredicateBuilder {
             }
         }
 
+        //query search
+        if(filters.get("q")!=null){
+            if(!filters.get("q").isEmpty()) {
+                where.and(product.libelle.likeIgnoreCase("%"+filters.get("q")+"%"));
+            }
+        }
+
         return where;
     }
 }
