@@ -1,14 +1,14 @@
 package com.ayoam.productservice.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sun.istack.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -20,4 +20,9 @@ public class Brand {
     private Long idb;
     @NotNull
     private String name;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "brand")
+    private List<Product> productsList = new ArrayList<>();
+
 }
