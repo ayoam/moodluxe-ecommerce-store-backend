@@ -134,7 +134,8 @@ public class ProductService {
     }
 
     public Product updateProduct(ProductDto dto,Long idp) {
-        if(productRepository.findById(idp).orElse(null)==null){
+        Product product = productRepository.findById(idp).orElse(null);
+        if(product==null){
             throw new RuntimeException("invalid product!");
         }
         Brand brand = brandRepository.findById(dto.getIdBrand()).orElse(null);
@@ -152,11 +153,11 @@ public class ProductService {
             throw new IllegalArgumentException("Brand id invalid!");
         }
 
-        Product product = productConverter.dtoToProduct(dto);
-        product.setCategoryList(catList);
-        product.setBrand(brand);
-        product.setIdp(idp);
-
+        Product newModifiedProduct = productConverter.dtoToProduct(dto);
+        newModifiedProduct.setCategoryList(catList);
+        newModifiedProduct.setBrand(brand);
+        newModifiedProduct.setIdp(idp);
+        newModifiedProduct.setPhotoList(product.getPhotoList());
         return productRepository.save(product);
 
     }
