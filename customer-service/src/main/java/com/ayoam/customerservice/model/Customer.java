@@ -26,6 +26,8 @@ public class Customer {
     private String phoneNumber;
     @NotNull
     private Date birthDate;
+    @NotNull
+    private String gender;
 
     private String keycloakId;
     @NotNull

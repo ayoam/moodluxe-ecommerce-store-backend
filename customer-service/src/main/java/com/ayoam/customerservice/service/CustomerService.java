@@ -12,10 +12,13 @@ import com.ayoam.customerservice.repository.CustomerRepository;
 import com.ayoam.customerservice.utils.JwtDataUtil;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
@@ -36,6 +39,9 @@ public class CustomerService {
     private KeycloakService keycloakService;
 
     private JwtDataUtil jwtDataUtil;
+
+    @Value("${cart-service-url}")
+    private String cart_service_url;
 
     @Autowired
     public CustomerService(CustomerRepository customerRepository, CustomerConverter customerConverter, AdresseConverter adresseConverter, WebClient.Builder webClientBuiler, CustomerAdresseRepository customerAdresseRepository, CountryRepository countryRepository, KeycloakService keycloakAdminClientService,JwtDataUtil jwtDataUtil) {
@@ -82,15 +88,16 @@ public class CustomerService {
         customer = customerRepository.save(customer);
 
         //create customer cart
-//        CreateCartRequest req = new CreateCartRequest(customer.getIdc());
-//        CartCreatedResponse result = webClientBuiler.build().post()
-//                .uri("http://localhost:8080/api/v1/carts")
-//                .body(Mono.just(req),new ParameterizedTypeReference<CreateCartRequest>() {})
-//                .retrieve()
-//                .bodyToMono(CartCreatedResponse.class)
-//                .block();
-//
-//        customer.setCartId(result.getCartId());
+        CreateCartRequest req = new CreateCartRequest(customer.getIdc());
+        CartCreatedResponse result = webClientBuiler.build().post()
+                .uri(cart_service_url)
+                .body(Mono.just(req),new ParameterizedTypeReference<CreateCartRequest>() {})
+                .retrieve()
+                .bodyToMono(CartCreatedResponse.class)
+                .block();
+
+        customer.setCartId(result.getCartId());
+
         return customerRepository.save(customer);
     }
 

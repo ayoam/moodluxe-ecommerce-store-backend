@@ -17,4 +17,6 @@ public class CustomerDetailsDto {
     private String phoneNumber;
     @NotNull
     private Date birthDate;
+    @NotNull
+    private String gender;
 }
