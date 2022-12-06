@@ -25,6 +25,8 @@ public class CustomerDto {
     private Date birthDate;
     @NotNull
     private String password;
+    @NotNull
+    private String gender;
 
     private String keycloakId;
 

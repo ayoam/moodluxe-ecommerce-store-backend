@@ -13,6 +13,7 @@ public class CustomerConverter {
         customer.setEmail(dto.getEmail());
         customer.setPhoneNumber(dto.getPhoneNumber());
         customer.setBirthDate(dto.getBirthDate());
+        customer.setGender(dto.getGender());
         customer.setKeycloakId(dto.getKeycloakId());
         return customer;
     }
