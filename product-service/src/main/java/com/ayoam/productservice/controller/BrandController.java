@@ -16,7 +16,7 @@ public class BrandController {
     public BrandController(BrandService brandService) {
         this.brandService = brandService;
     }
-    @GetMapping("products/brands")
+    @GetMapping("brands")
     public ResponseEntity<?> getAllBrands(){
         return new ResponseEntity<AllBrandsResponse>(brandService.getBrands(), HttpStatus.OK);
     }
