@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.List;
@@ -203,5 +204,10 @@ public class CustomerService {
 
     public void forgotPasswordHandler(ForgotPasswordRequest forgotPasswordRequest) {
         keycloakService.sendForgotPasswordEmail(forgotPasswordRequest.getEmail());
+    }
+
+    public ResponseEntity<?> checkEmailExistance(String email){
+        customerRepository.findByEmailIgnoreCase(email).orElseThrow(()->new NotFoundException("email not found"));
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
