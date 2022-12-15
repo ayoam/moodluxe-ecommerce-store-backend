@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +37,7 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
     @PutMapping("/updatePassword")
     public ResponseEntity<Customer> updateCustomerPassword(@RequestBody UpdatePasswordDto passwordDto, HttpServletRequest request){
         return new ResponseEntity<Customer>(customerService.updateCustomerPassword(passwordDto,request),HttpStatus.OK);
