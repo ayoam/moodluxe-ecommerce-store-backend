@@ -10,6 +10,10 @@ import com.ayoam.customerservice.repository.CountryRepository;
 import com.ayoam.customerservice.repository.CustomerAdresseRepository;
 import com.ayoam.customerservice.repository.CustomerRepository;
 import com.ayoam.customerservice.utils.JwtDataUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +30,8 @@ import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class CustomerService {
@@ -122,9 +128,9 @@ public class CustomerService {
     public ResponseEntity<?> loginCustomer(LoginRequest loginRequest){
         AccessTokenResponse response = keycloakService.loginKeycloakUser(loginRequest);
         if(response==null){
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }else{
-            return new ResponseEntity<>(keycloakService.loginKeycloakUser(loginRequest), HttpStatus.OK);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         }
     }
 
@@ -209,5 +215,9 @@ public class CustomerService {
     public ResponseEntity<?> checkEmailExistance(String email){
         customerRepository.findByEmailIgnoreCase(email).orElseThrow(()->new NotFoundException("email not found"));
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> refreshToken(RefreshTokenRequest refreshTokenRequest) throws JsonProcessingException {
+        return keycloakService.refreshToken(refreshTokenRequest.getRefreshToken());
     }
 }

@@ -18,4 +18,16 @@ public class CustomerConverter {
         return customer;
     }
 
+    public CustomerDto customerToCustomerDto(Customer customer){
+        CustomerDto dto = new CustomerDto();
+        dto.setFirstName(customer.getFirstName());
+        dto.setLastName(customer.getLastName());
+        dto.setEmail(customer.getEmail());
+        dto.setPhoneNumber(customer.getPhoneNumber());
+        dto.setBirthDate(customer.getBirthDate());
+        dto.setGender(customer.getGender());
+        dto.setKeycloakId(customer.getKeycloakId());
+        dto.setIdc(customer.getIdc());
+        return dto;
+    }
 }
