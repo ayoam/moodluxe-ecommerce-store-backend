@@ -1,22 +1,21 @@
-package com.ayoam.customerservice.config;
+package com.ayoam.productservice.config;
 
+import org.apache.http.protocol.HTTP;
 import org.keycloak.KeycloakPrincipal;
-import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.keycloak.adapters.springsecurity.account.KeycloakRole;
-import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
-import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
+import org.keycloak.authorization.client.util.Http;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
@@ -24,16 +23,16 @@ import org.springframework.security.web.authentication.session.SessionAuthentica
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
+import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 
 import java.util.ArrayList;
 import java.util.List;
 
+
 @KeycloakConfiguration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-
-public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
-{
-
+public class keycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(keycloakAuthenticationProvider());
@@ -54,21 +53,14 @@ public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
     protected void configure(HttpSecurity http) throws Exception
     {
         super.configure(http);
-            http
+        http
                 .cors()
                 .and()
                 .csrf()
                 .disable()
                 .authorizeRequests()
-                .antMatchers("/auth/login").permitAll()
-                .antMatchers("/auth/register").permitAll()
-                .antMatchers("/auth/forgotPassword").permitAll()
-                .antMatchers("/auth/check-email/**").permitAll()
-                .antMatchers("/auth/refreshToken").permitAll()
-                .antMatchers("/countries").permitAll()
-                .anyRequest().authenticated();
+                .anyRequest().permitAll();
     }
-
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -105,5 +97,5 @@ public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
 
         };
     }
-
 }
+

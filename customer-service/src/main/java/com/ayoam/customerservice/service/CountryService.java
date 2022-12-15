@@ -3,6 +3,8 @@ package com.ayoam.customerservice.service;
 import com.ayoam.customerservice.dto.GetCountriesResponse;
 import com.ayoam.customerservice.repository.CountryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 

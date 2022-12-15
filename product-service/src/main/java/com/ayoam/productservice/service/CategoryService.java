@@ -8,6 +8,7 @@ import com.ayoam.productservice.repository.BrandRepository;
 import com.ayoam.productservice.repository.CategoryRepository;
 import com.ayoam.productservice.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class CategoryService {
         return res;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public Category addCategory(Category category) {
         if(categoryRepository.findByNameIgnoreCase(category.getName()).orElse(null)!=null){
             throw new RuntimeException("category already exist");
@@ -37,6 +39,7 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public Category updateCategory(Category category,Long idc) {
         Category cat = categoryRepository.findById(idc).orElse(null);
         if(cat==null){
@@ -49,6 +52,7 @@ public class CategoryService {
         return categoryRepository.save(cat);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteCategory(Long idc) {
         Category cat = categoryRepository.findById(idc).orElse(null);
         if(cat==null){
