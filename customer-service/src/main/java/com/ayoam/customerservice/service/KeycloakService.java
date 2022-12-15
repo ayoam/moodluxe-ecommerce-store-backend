@@ -3,7 +3,7 @@ package com.ayoam.customerservice.service;
 import com.ayoam.customerservice.config.KeycloakProvider;
 import com.ayoam.customerservice.dto.CustomerDto;
 import com.ayoam.customerservice.dto.LoginRequest;
-import com.ayoam.customerservice.model.Customer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
@@ -11,11 +11,10 @@ import org.keycloak.representations.AccessTokenResponse;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -68,7 +67,7 @@ public class KeycloakService {
         return passwordCredentials;
     }
 
-    public AccessTokenResponse  loginKeycloakUser(LoginRequest loginRequest){
+    public AccessTokenResponse loginKeycloakUser(LoginRequest loginRequest){
         Keycloak keycloak = kcProvider.newKeycloakBuilderWithPasswordCredentials(loginRequest.getEmail(), loginRequest.getPassword()).build();
         AccessTokenResponse accessTokenResponse = null;
         try {
@@ -93,5 +92,9 @@ public class KeycloakService {
             usersResource.get(userId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
 //            usersResource.get(userId).sendVerifyEmail();
         }
+    }
+
+    public ResponseEntity<?> refreshToken(String refreshToken) throws JsonProcessingException {
+        return kcProvider.refreshToken(refreshToken);
     }
 }

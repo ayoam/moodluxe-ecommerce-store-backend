@@ -1,11 +1,10 @@
 package com.ayoam.customerservice.controller;
 
-import com.ayoam.customerservice.dto.CustomerDto;
-import com.ayoam.customerservice.dto.ForgotPasswordRequest;
-import com.ayoam.customerservice.dto.LoginRequest;
-import com.ayoam.customerservice.dto.UpdatePasswordDto;
+import com.ayoam.customerservice.dto.*;
 import com.ayoam.customerservice.model.Customer;
 import com.ayoam.customerservice.service.CustomerService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,4 +45,11 @@ public class AuthController {
     public ResponseEntity<?> checkEmailExistance(@PathVariable String email){
         return customerService.checkEmailExistance(email);
     }
+
+    @PostMapping("/refreshToken")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest refreshTokenRequest) throws JsonProcessingException {
+        return customerService.refreshToken(refreshTokenRequest);
+    }
+
+
 }

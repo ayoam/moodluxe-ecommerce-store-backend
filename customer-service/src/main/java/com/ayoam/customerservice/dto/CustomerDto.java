@@ -23,11 +23,13 @@ public class CustomerDto {
     private String phoneNumber;
     @NotNull
     private Date birthDate;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotNull
     private String password;
     @NotNull
     private String gender;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String keycloakId;
 
     @JsonProperty("customerAdresse")
