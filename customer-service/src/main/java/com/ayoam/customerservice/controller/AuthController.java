@@ -27,7 +27,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginCustomer(@RequestBody LoginRequest loginRequest){
+    public ResponseEntity<?> loginCustomer(@RequestBody LoginRequest loginRequest) throws JsonProcessingException {
         return customerService.loginCustomer(loginRequest);
     }
 

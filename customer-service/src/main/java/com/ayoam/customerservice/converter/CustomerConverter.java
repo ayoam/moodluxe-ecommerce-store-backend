@@ -28,6 +28,7 @@ public class CustomerConverter {
         dto.setGender(customer.getGender());
         dto.setKeycloakId(customer.getKeycloakId());
         dto.setIdc(customer.getIdc());
+        dto.setCartId(customer.getCartId());
         return dto;
     }
 }

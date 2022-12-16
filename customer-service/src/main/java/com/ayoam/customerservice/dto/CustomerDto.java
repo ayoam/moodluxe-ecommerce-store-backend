@@ -32,6 +32,8 @@ public class CustomerDto {
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String keycloakId;
 
+    private Long cartId;
+
     @JsonProperty("customerAdresse")
     private CustomerAdresseDto adresseDto;
 }

@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -94,7 +95,7 @@ public class KeycloakService {
         }
     }
 
-    public ResponseEntity<?> refreshToken(String refreshToken) throws JsonProcessingException {
+    public Map<String,Object> refreshToken(String refreshToken) throws JsonProcessingException {
         return kcProvider.refreshToken(refreshToken);
     }
 }

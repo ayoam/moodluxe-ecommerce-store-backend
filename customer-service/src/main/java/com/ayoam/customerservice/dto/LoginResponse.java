@@ -1,6 +1,7 @@
 package com.ayoam.customerservice.dto;
 
 import com.ayoam.customerservice.model.Customer;
+import com.ayoam.customerservice.model.UserInfo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,5 +21,5 @@ public class LoginResponse {
 
     @NotNull
     @JsonProperty("userInfo")
-    private CustomerDto customer;
+    private UserInfo userInfo;
 }

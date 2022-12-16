@@ -6,6 +6,7 @@ import com.ayoam.customerservice.dto.*;
 import com.ayoam.customerservice.model.Country;
 import com.ayoam.customerservice.model.Customer;
 import com.ayoam.customerservice.model.CustomerAdresse;
+import com.ayoam.customerservice.model.UserInfo;
 import com.ayoam.customerservice.repository.CountryRepository;
 import com.ayoam.customerservice.repository.CustomerAdresseRepository;
 import com.ayoam.customerservice.repository.CustomerRepository;
@@ -14,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import lombok.extern.java.Log;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,9 +29,7 @@ import reactor.core.publisher.Mono;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -125,12 +125,17 @@ public class CustomerService {
 
 
 
-    public ResponseEntity<?> loginCustomer(LoginRequest loginRequest){
+    public ResponseEntity<?> loginCustomer(LoginRequest loginRequest) throws JsonProcessingException {
         AccessTokenResponse response = keycloakService.loginKeycloakUser(loginRequest);
         if(response==null){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }else{
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            ObjectMapper mapper = new ObjectMapper();
+            LoginResponse loginResponse = new LoginResponse();
+            loginResponse.setAccessToken(response.getToken());
+            loginResponse.setRefreshToken(response.getRefreshToken());
+            loginResponse.setUserInfo(buildUserInfoObject(mapper.convertValue(response, ObjectNode.class)));
+            return new ResponseEntity<>(loginResponse, HttpStatus.OK);
         }
     }
 
@@ -218,6 +223,49 @@ public class CustomerService {
     }
 
     public ResponseEntity<?> refreshToken(RefreshTokenRequest refreshTokenRequest) throws JsonProcessingException {
-        return keycloakService.refreshToken(refreshTokenRequest.getRefreshToken());
+        Map<String,Object> resObj = keycloakService.refreshToken(refreshTokenRequest.getRefreshToken());
+        if((HttpStatus)resObj.get("status")==HttpStatus.valueOf(200)){
+            ObjectNode body = (ObjectNode) resObj.get("body");
+            LoginResponse loginResponse = new LoginResponse();
+            loginResponse.setAccessToken(body.get("access_token").asText());
+            loginResponse.setRefreshToken(body.get("refresh_token").asText());
+            loginResponse.setUserInfo(buildUserInfoObject(body));
+
+            return new ResponseEntity<>(loginResponse,(HttpStatus)resObj.get("status"));
+        }
+        else{
+            return new ResponseEntity<>(resObj.get("body"),(HttpStatus)resObj.get("status"));
+        }
+    }
+
+
+    private UserInfo buildUserInfoObject(ObjectNode body) throws JsonProcessingException {
+        //decode jwt and extract email
+        Base64.Decoder decoder = Base64.getUrlDecoder();
+        String[] chunks = body.get("access_token").toString().split("\\.");
+        String payload = new String(decoder.decode(chunks[1]));
+        String email = (new ObjectMapper()).readTree(payload).get("email").asText();
+        String firstName = (new ObjectMapper()).readTree(payload).get("given_name").asText();
+        String lastName = (new ObjectMapper()).readTree(payload).get("family_name").asText();
+        String emailVerified = (new ObjectMapper()).readTree(payload).get("email_verified").asText();
+        String keycloakId = (new ObjectMapper()).readTree(payload).get("sid").asText();
+
+        //get roles from jwt token
+        List<String> roles = new ArrayList<>();
+        JsonNode arrNode= (new ObjectMapper()).readTree(payload).get("realm_access").get("roles");
+
+        arrNode.forEach(item->{
+            roles.add(item.asText());
+        });
+
+        Customer customer = customerRepository.findByEmailIgnoreCase(email).orElse(null);
+        UserInfo userInfo = new UserInfo(firstName,lastName,email,keycloakId,roles);
+
+        if(customer!=null){
+            userInfo.setCustomerId(customer.getIdc());
+            userInfo.setCartId(customer.getCartId());
+        }
+
+        return userInfo;
     }
 }
