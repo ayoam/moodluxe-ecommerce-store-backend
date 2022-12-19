@@ -104,4 +104,27 @@ public class CartService {
         Cart c = cartRepository.save(cart);
         return new CartCreatedResponse(c.getCartId());
     }
+
+    public Cart addCartItemsList(Long cartId, List<CartItem> cartItemsList) {
+        Cart cart = cartRepository.findById(cartId).orElse(null);
+        if(cart==null){
+            throw new RuntimeException("cart not found");
+        }
+
+        cartItemsList.forEach(item->{
+            CartItem ci = cart.getCartItemList().stream().filter(x->x.getProductId().equals(item.getProductId())).findFirst().orElse(null);
+            if(ci==null){
+                cart.addToCart(item);
+            }else{
+                if((ci.getQuantity()+item.getQuantity()<=ci.getProductStock())){
+                    ci.setQuantity(ci.getQuantity()+item.getQuantity());
+                }else{
+                    ci.setQuantity(ci.getProductStock());
+                }
+                cartItemRepository.save(ci);
+            }
+        });
+
+        return cartRepository.save(cart);
+    }
 }

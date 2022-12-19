@@ -87,7 +87,40 @@ public class KeycloakProvider {
 //                .asJson().getBody();
 //    }
 
-    public ResponseEntity<?> refreshToken(String refreshToken) throws JsonProcessingException {
+//    public ResponseEntity<?> refreshToken(String refreshToken) throws JsonProcessingException {
+//        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+//        formData.add("client_id", clientID);
+//        formData.add("client_secret", clientSecret);
+//        formData.add("refresh_token", refreshToken);
+//        formData.add("grant_type", "refresh_token");
+//
+//        String url = serverURL + "/realms/" + realm + "/protocol/openid-connect/token";
+//
+//        try{
+//            Map<String,Object> response =  webClientBuiler.build().post()
+//                    .uri(url)
+//                    .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+//                    .body(BodyInserters.fromFormData(formData))
+//                    .retrieve()
+//                    .toEntity(JsonNode.class)
+//                    .map(entity->{
+//                        Map<String,Object> res = new HashMap<>();
+//                        res.put("body",entity.getBody());
+//                        res.put("status",entity.getStatusCode());
+//                        return res;
+//                    })
+//                    .block();
+//            return new ResponseEntity<>(response.get("body"), (HttpStatus) response.get("status"));
+//        }
+//        catch (WebClientResponseException ex){
+//            ObjectMapper mapper = new ObjectMapper();
+//            JsonNode errorResponse = mapper.readTree(ex.getResponseBodyAsString());
+//            return new ResponseEntity<>(errorResponse,ex.getStatusCode());
+//        }
+//
+//    }
+
+    public Map<String,Object> refreshToken(String refreshToken) throws JsonProcessingException {
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("client_id", clientID);
         formData.add("client_secret", clientSecret);
@@ -104,23 +137,21 @@ public class KeycloakProvider {
                     .retrieve()
                     .toEntity(JsonNode.class)
                     .map(entity->{
-//                        ObjectMapper mapper = new ObjectMapper();
-//                        JsonNode newObj = mapper.createObjectNode();
-//                        ((ObjectNode)newObj).put("access_token",entity.getBody().get("access_token"));
                         Map<String,Object> res = new HashMap<>();
                         res.put("body",entity.getBody());
                         res.put("status",entity.getStatusCode());
                         return res;
                     })
                     .block();
-            return new ResponseEntity<>(response.get("body"), (HttpStatus) response.get("status"));
+            return response;
         }
         catch (WebClientResponseException ex){
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode errorResponse = mapper.readTree(ex.getResponseBodyAsString());
-            return new ResponseEntity<>(errorResponse,ex.getStatusCode());
+            JsonNode errorResponse = (new ObjectMapper()).readTree(ex.getResponseBodyAsString());
+            Map<String,Object> res = new HashMap<>();
+            res.put("body",errorResponse);
+            res.put("status",ex.getStatusCode());
+            return res;
         }
 
     }
-
 }

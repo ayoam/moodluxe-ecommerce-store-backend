@@ -1,6 +1,7 @@
 package com.ayoam.cartservice.controller;
 
 import com.ayoam.cartservice.dto.CartCreatedResponse;
+import com.ayoam.cartservice.dto.CartItemsListRequest;
 import com.ayoam.cartservice.model.Cart;
 import com.ayoam.cartservice.model.CartItem;
 import com.ayoam.cartservice.service.CartService;
@@ -35,6 +36,11 @@ public class CartController {
     @PostMapping("/carts/{cartId}/addToCart")
     public ResponseEntity<Cart> addToCart(@PathVariable Long cartId, @RequestBody CartItem cartItem){
         return new ResponseEntity<Cart>(cartService.addToCart(cartId,cartItem),HttpStatus.CREATED);
+    }
+
+    @PostMapping("/carts/{cartId}/addCartItemsList")
+    public ResponseEntity<Cart> addCartItemsList(@PathVariable Long cartId, @RequestBody CartItemsListRequest cartItemsListRequest){
+        return new ResponseEntity<Cart>(cartService.addCartItemsList(cartId,cartItemsListRequest.getCartItems()),HttpStatus.CREATED);
     }
 
     @DeleteMapping("/carts/{cartId}/cartItems/{cartItemId}/removeFromCart")

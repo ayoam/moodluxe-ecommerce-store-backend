@@ -4,10 +4,7 @@ import com.sun.istack.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Data
 @Entity(name="cart_item")
@@ -19,7 +16,8 @@ public class CartItem {
     @NotNull
     private Long productId;
     @NotNull
-    private String mainPhoto;
+    @OneToOne(cascade = CascadeType.ALL)
+    private Photo mainPhoto;
     @NotNull
     private String libelle;
     @NotNull
