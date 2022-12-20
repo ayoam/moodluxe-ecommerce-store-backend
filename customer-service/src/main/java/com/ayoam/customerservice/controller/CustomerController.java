@@ -25,6 +25,12 @@ public class CustomerController {
         return new ResponseEntity<getAllCustomersResponse>(customerService.getAllCustomers(), HttpStatus.OK);
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
+    public ResponseEntity<Customer> getCustomerById(@PathVariable Long id){
+        return new ResponseEntity<Customer>(customerService.getCustomerById(id), HttpStatus.OK);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteCustomer(@PathVariable Long id){

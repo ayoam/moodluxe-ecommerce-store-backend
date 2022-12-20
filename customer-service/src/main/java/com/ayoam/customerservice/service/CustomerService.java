@@ -268,4 +268,8 @@ public class CustomerService {
 
         return userInfo;
     }
+
+    public Customer getCustomerById(Long id) {
+        return customerRepository.findById(id).orElseThrow();
+    }
 }
