@@ -3,11 +3,9 @@ package com.ayoam.orderservice.model;
 import com.sun.istack.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Data
 @NoArgsConstructor
@@ -25,5 +23,7 @@ public class OrderLineItem {
     @NotNull
     private int quantity;
     @NotNull
-    private String mainPhoto;
+    @OneToOne(cascade = CascadeType.ALL)
+    private Photo mainPhoto;
+
 }
