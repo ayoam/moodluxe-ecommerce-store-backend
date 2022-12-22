@@ -18,11 +18,14 @@ public class OrderAdresse {
     @JsonProperty("HomeAdresse")
     private String adresse;
     @NotNull
+    private String firstName;
+    @NotNull
+    private String lastName;
+    @NotNull
     private String city;
     @NotNull
     private int postalCode;
     @NotNull
     private String stateProvince;
-    @ManyToOne
-    private Country country;
+    private String country;
 }
