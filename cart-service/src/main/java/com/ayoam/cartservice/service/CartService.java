@@ -127,4 +127,15 @@ public class CartService {
 
         return cartRepository.save(cart);
     }
+
+    public void clearCart(Long cartId) {
+        Cart cart = cartRepository.findById(cartId).orElse(null);
+        if(cart==null){
+            throw new RuntimeException("cart not found");
+        }
+
+        cartItemRepository.deleteAll(cart.getCartItemList());
+        cart.setCartItemList(new ArrayList<CartItem>());
+        cartRepository.save(cart);
+    }
 }

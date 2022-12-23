@@ -49,6 +49,12 @@ public class CartController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @PostMapping("/carts/{cartId}/clear")
+    public ResponseEntity<?> clearCart(@PathVariable Long cartId){
+        cartService.clearCart(cartId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     @PutMapping("/carts/cartItems/{cartItemId}/updateQuantity")
     public ResponseEntity<CartItem> updateCartItemQuantity(@PathVariable Long cartItemId,@RequestParam int quantity){
         return new ResponseEntity<CartItem>(cartService.updateCartItemQuantity(cartItemId,quantity),HttpStatus.OK);
