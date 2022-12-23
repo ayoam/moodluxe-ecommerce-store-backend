@@ -26,4 +26,7 @@ public class OrderDto {
     private OrderAdresse orderAdresse;
     @NotNull
     private Long customerID;
+
+    @NotNull
+    private Long cartID;
 }

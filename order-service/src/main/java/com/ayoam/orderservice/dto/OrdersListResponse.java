@@ -1,6 +1,7 @@
 package com.ayoam.orderservice.dto;
 
 import com.ayoam.orderservice.model.Order;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -8,6 +9,7 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-public class GetAllOrdersResponse {
+@AllArgsConstructor
+public class OrdersListResponse {
     private List<Order> orderList;
 }
