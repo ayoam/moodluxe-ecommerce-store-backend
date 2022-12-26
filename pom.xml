@@ -3,7 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.example</groupId>
   <artifactId>ecommerce-store-microservices</artifactId>
-  <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+  <modules>
+    <module>email-service</module>
+  </modules>
   <name>Archetype - ecommerce-store-microservices</name>
   <url>http://maven.apache.org</url>
 </project>
