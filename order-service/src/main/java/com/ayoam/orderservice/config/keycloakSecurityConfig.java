@@ -56,6 +56,7 @@ public class keycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
                 .csrf()
                 .disable()
                 .authorizeRequests()
+                .antMatchers("/carts/{\\d+}/clear").authenticated()
                 .anyRequest().permitAll();
     }
     @Bean
@@ -72,6 +73,7 @@ public class keycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
         config.addAllowedMethod("POST");
         config.addAllowedMethod("DELETE");
         config.addAllowedMethod("PATCH");
+        config.addExposedHeader("Content-Disposition");
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }

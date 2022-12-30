@@ -5,11 +5,19 @@ import com.ayoam.orderservice.dto.OrderDto;
 import com.ayoam.orderservice.dto.OrderStatusRequest;
 import com.ayoam.orderservice.model.Order;
 import com.ayoam.orderservice.service.OrderService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
+import java.net.http.HttpResponse;
 
 @RestController
 @RequestMapping("/orders")
@@ -49,5 +57,11 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Long id){
         return new ResponseEntity<Order>(orderService.getOrderById(id), HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @GetMapping(value = "/invoice/{invoiceId}", produces = {MediaType.APPLICATION_PDF_VALUE})
+    public ResponseEntity<?> generateInvoice(@PathVariable Long invoiceId,HttpServletResponse response) throws JsonProcessingException, JRException, FileNotFoundException {
+        return new ResponseEntity<>(orderService.generateInvoice(response,invoiceId),HttpStatus.OK);
     }
 }

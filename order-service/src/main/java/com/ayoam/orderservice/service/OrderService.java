@@ -5,16 +5,35 @@ import com.ayoam.orderservice.dto.*;
 import com.ayoam.orderservice.kafka.publisher.OrderPublisher;
 import com.ayoam.orderservice.model.Invoice;
 import com.ayoam.orderservice.model.Order;
+import com.ayoam.orderservice.model.OrderLineItem;
 import com.ayoam.orderservice.model.OrderStatus;
 import com.ayoam.orderservice.repository.OrderRepository;
 import com.ayoam.orderservice.repository.OrderStatusRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.sf.jasperreports.engine.*;
+import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ResourceUtils;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class OrderService {
@@ -113,5 +132,42 @@ public class OrderService {
 
     public Order getOrderById(Long id) {
         return orderRepository.findById(id).orElseThrow();
+    }
+
+    public byte[] generateInvoice(HttpServletResponse servletResponse ,Long invoiceId) throws FileNotFoundException, JRException, JsonProcessingException {
+        InvoiceGenRequest request = new InvoiceGenRequest();
+
+        Order order = orderRepository.findByInvoiceInvoiceId(invoiceId).orElse(null);
+
+        if(order==null){
+            throw new RuntimeException("invoiceID invalid!");
+        }
+
+        List<InvoiceItem> invoiceItems = order.getOrderLineItemList().stream().map(item->new InvoiceItem(item.getLibelle(),item.getQuantity(),item.getPrice())).toList();
+        request.setItems(invoiceItems);
+        request.setLogo("https://i.ibb.co/KDng43T/logo.png");
+        request.setFrom("Moodluxe \n Leatherwood Rd. \n Livermore, CA 94550 \n United states");
+        request.setTo(order.getOrderAdresse().getFormattedAdresse());
+        request.setNumber(invoiceId);
+        request.setDate(order.getInvoice().getFormattedInvoiceDate());
+        request.setAmount_paid(order.getOrderTotal());
+        request.setNotes("Thank you for shopping with us!");
+        request.setDate_title("Invoice date");
+
+        servletResponse.setContentType("application/pdf");
+        servletResponse.setHeader("Content-Disposition","attachment; filename=\"Invoice #"+invoiceId+".pdf\";");
+
+        try {
+            byte[] response = webClientBuiler.build().post()
+                    .uri("https://invoice-generator.com")
+                    .body(Mono.just(request), InvoiceGenRequest.class)
+                    .retrieve()
+                    .bodyToMono(ByteArrayResource.class)
+                    .map(ByteArrayResource::getByteArray)
+                    .block();
+            return response;
+        } catch (WebClientResponseException ex) {
+            throw new RuntimeException();
+        }
     }
 }
