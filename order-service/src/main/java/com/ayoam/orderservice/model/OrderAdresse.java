@@ -28,4 +28,12 @@ public class OrderAdresse {
     @NotNull
     private String stateProvince;
     private String country;
+
+    public String getFullName(){
+        return this.firstName+" "+this.lastName;
+    }
+
+    public String getFormattedAdresse(){
+        return this.getFullName()+" \n "+this.getAdresse() +" \n "+this.getCity() +","+ this.getPostalCode()+" \n "+this.getStateProvince()+" , "+this.getCountry();
+    }
 }

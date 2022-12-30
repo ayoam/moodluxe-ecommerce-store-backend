@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Data
@@ -24,4 +25,9 @@ public class Invoice {
     @Column(name = "InvoiceDate", nullable = false, updatable = false)
     private Date InvoiceDate;
 
+
+    public String getFormattedInvoiceDate(){
+        SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy");
+        return formatter.format(this.InvoiceDate);
+    }
 }

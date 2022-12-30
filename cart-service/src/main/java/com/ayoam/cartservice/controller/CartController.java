@@ -54,7 +54,6 @@ public class CartController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("/carts/{cartId}/clear")
     public ResponseEntity<?> clearCart(@PathVariable Long cartId){
         cartService.clearCart(cartId);
