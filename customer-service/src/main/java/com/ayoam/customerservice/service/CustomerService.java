@@ -272,4 +272,8 @@ public class CustomerService {
     public Customer getCustomerById(Long id) {
         return customerRepository.findById(id).orElseThrow();
     }
+
+    public Long getCustomersTotal() {
+        return customerRepository.customersTotal();
+    }
 }

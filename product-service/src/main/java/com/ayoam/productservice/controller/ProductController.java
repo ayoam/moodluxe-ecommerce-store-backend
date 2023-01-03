@@ -61,4 +61,10 @@ public class ProductController {
         return new ResponseEntity<Product>(productService.findProduct(idp),HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/products/productsTotal")
+    public ResponseEntity<Long> getProductsTotal(){
+        return new ResponseEntity<Long>(productService.getProductsTotal(),HttpStatus.OK);
+    }
+
 }
