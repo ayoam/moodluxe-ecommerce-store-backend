@@ -14,4 +14,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, Queryds
 
     @Query(value = "SELECT CEIL(max(originalPrice)/100)*100 FROM Product")
     public int maxPrice();
+
+    @Query(value = "SELECT count(idp) FROM Product")
+    public Long productsTotal();
 }

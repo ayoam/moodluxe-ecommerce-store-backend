@@ -44,8 +44,14 @@ public class Order {
     @Column(name = "OrderDate", nullable = false, updatable = false)
     private Date OrderDate;
 
+    private Double orderTotal;
+
     public Double getOrderTotal(){
         return orderLineItemList.stream().map(item -> item.getQuantity() * item.getPrice()).reduce(0D, Double::sum);
+    }
+
+    public void calculateOrderTotal(){
+        this.orderTotal = orderLineItemList.stream().map(item -> item.getQuantity() * item.getPrice()).reduce(0D, Double::sum);
     }
 
 }

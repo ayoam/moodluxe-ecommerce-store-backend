@@ -1,23 +1,15 @@
 package com.ayoam.orderservice.controller;
 
-import com.ayoam.orderservice.dto.OrdersListResponse;
-import com.ayoam.orderservice.dto.OrderDto;
-import com.ayoam.orderservice.dto.OrderStatusRequest;
+import com.ayoam.orderservice.dto.*;
 import com.ayoam.orderservice.model.Order;
 import com.ayoam.orderservice.service.OrderService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.FileNotFoundException;
-import java.net.http.HttpResponse;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/orders")
@@ -27,12 +19,6 @@ public class OrderController {
     @Autowired
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping
-    public ResponseEntity<OrdersListResponse> getAllOrders(){
-        return new ResponseEntity<OrdersListResponse>(orderService.getAllOrders(),HttpStatus.OK);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
@@ -59,9 +45,22 @@ public class OrderController {
         return new ResponseEntity<Order>(orderService.getOrderById(id), HttpStatus.OK);
     }
 
-    @PreAuthorize("hasRole('CUSTOMER')")
-    @GetMapping(value = "/invoice/{invoiceId}", produces = {MediaType.APPLICATION_PDF_VALUE})
-    public ResponseEntity<?> generateInvoice(@PathVariable Long invoiceId,HttpServletResponse response) throws JsonProcessingException, JRException, FileNotFoundException {
-        return new ResponseEntity<>(orderService.generateInvoice(response,invoiceId),HttpStatus.OK);
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<OrdersListResponse> getAllOrders(@RequestParam Map<String,String> filters){
+        return new ResponseEntity<OrdersListResponse>(orderService.getAllOrders(filters),HttpStatus.OK);
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/salesStatistics")
+    public ResponseEntity<SalesStatisticsResponse> getSalesStatistics(){
+        return new ResponseEntity<SalesStatisticsResponse>(orderService.getSalesStatistics(),HttpStatus.OK);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/totalOrdersAndSales")
+    public ResponseEntity<TotalOrdersAndSalesResponse> getTotalOrdersAndSales(){
+        return new ResponseEntity<TotalOrdersAndSalesResponse>(orderService.getTotalOrdersAndSales(),HttpStatus.OK);
+    }
+
 }

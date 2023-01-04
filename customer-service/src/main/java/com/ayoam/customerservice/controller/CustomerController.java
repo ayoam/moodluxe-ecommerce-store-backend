@@ -50,4 +50,10 @@ public class CustomerController {
         return new ResponseEntity<Customer>(customerService.updateCustomerAdresse(adresseDto,id),HttpStatus.OK);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/customersTotal")
+    public ResponseEntity<Long> getCustomersTotal(){
+        return new ResponseEntity<Long>(customerService.getCustomersTotal(),HttpStatus.OK);
+    }
+
 }

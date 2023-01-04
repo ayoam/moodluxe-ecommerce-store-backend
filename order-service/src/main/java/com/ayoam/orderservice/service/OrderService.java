@@ -5,33 +5,26 @@ import com.ayoam.orderservice.dto.*;
 import com.ayoam.orderservice.kafka.publisher.OrderPublisher;
 import com.ayoam.orderservice.model.Invoice;
 import com.ayoam.orderservice.model.Order;
-import com.ayoam.orderservice.model.OrderLineItem;
 import com.ayoam.orderservice.model.OrderStatus;
 import com.ayoam.orderservice.repository.OrderRepository;
 import com.ayoam.orderservice.repository.OrderStatusRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import net.sf.jasperreports.engine.*;
-import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
+import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.FileNotFoundException;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +54,7 @@ public class OrderService {
         order.setStatus(status);
         Invoice invoice = new Invoice();
         order.setInvoice(invoice);
+        order.calculateOrderTotal();
         //orderRequest list
 //        List<OrderRequest> orderRequestList = new ArrayList<>();
 //        for(OrderLineItem item:orderDto.getOrderLineItemList()){
@@ -119,14 +113,15 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
-    public OrdersListResponse getAllOrders() {
+    public OrdersListResponse getAllOrders(Map<String,String> filters) {
         OrdersListResponse res = new OrdersListResponse();
-        res.setOrderList(orderRepository.findAll());
+        Pageable pages = PageRequest.of(Integer.parseInt(filters.get("page")),Integer.parseInt(filters.get("limit")), Sort.by(Sort.Direction.DESC, "orderNumber"));
+        res.setOrderList(orderRepository.findAll(pages).getContent());
         return res;
     }
 
     public OrdersListResponse getOrdersByCustomerId(Long customerId) {
-        List<Order> orderList = orderRepository.findByCustomerID(customerId).orElse(new ArrayList<Order>());
+        List<Order> orderList = orderRepository.findByCustomerIDOrderByOrderNumberDesc(customerId).orElse(new ArrayList<Order>());
         return new OrdersListResponse(orderList);
     }
 
@@ -169,5 +164,22 @@ public class OrderService {
         } catch (WebClientResponseException ex) {
             throw new RuntimeException();
         }
+    }
+
+    public SalesStatisticsResponse getSalesStatistics() {
+        SalesStatisticsResponse response = new SalesStatisticsResponse();
+        List<SalesStatistics> salesStatistics = orderRepository.getSalesStatistics();
+        for(int i=1;i<=12;i++){
+            if(!salesStatistics.stream().map(SalesStatistics::getMonth).toList().contains(i)){
+                salesStatistics.add(new SalesStatistics(i,0D));
+            }
+        }
+        salesStatistics.sort(Comparator.comparing(SalesStatistics::getMonth));
+        response.setSalesPerMonth(salesStatistics);
+        return response;
+    }
+
+    public TotalOrdersAndSalesResponse getTotalOrdersAndSales() {
+        return orderRepository.getTotalOrdersAndSales();
     }
 }
