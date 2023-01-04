@@ -10,7 +10,6 @@ import com.ayoam.orderservice.repository.OrderRepository;
 import com.ayoam.orderservice.repository.OrderStatusRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import net.sf.jasperreports.engine.JRException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
@@ -129,7 +128,7 @@ public class OrderService {
         return orderRepository.findById(id).orElseThrow();
     }
 
-    public byte[] generateInvoice(HttpServletResponse servletResponse ,Long invoiceId) throws FileNotFoundException, JRException, JsonProcessingException {
+    public byte[] generateInvoice(HttpServletResponse servletResponse ,Long invoiceId) throws FileNotFoundException, JsonProcessingException {
         InvoiceGenRequest request = new InvoiceGenRequest();
 
         Order order = orderRepository.findByInvoiceInvoiceId(invoiceId).orElse(null);
