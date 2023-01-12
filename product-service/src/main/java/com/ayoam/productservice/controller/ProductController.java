@@ -24,7 +24,7 @@ public class ProductController {
     }
 
     @GetMapping("/products")
-    public ResponseEntity<AllProductsResponse> getProducts(@RequestParam Map<String,String> filters, HttpServletResponse response){
+    public ResponseEntity<AllProductsResponse> getAllProducts(@RequestParam Map<String,String> filters, HttpServletResponse response){
         return new ResponseEntity<AllProductsResponse>(productService.getAllProducts(filters,response),HttpStatus.OK);
     }
 

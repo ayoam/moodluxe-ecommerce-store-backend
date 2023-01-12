@@ -10,6 +10,7 @@ import com.ayoam.orderservice.repository.OrderRepository;
 import com.ayoam.orderservice.repository.OrderStatusRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.Iterators;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
@@ -22,10 +23,7 @@ import reactor.core.publisher.Mono;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class OrderService {
@@ -113,9 +111,17 @@ public class OrderService {
     }
 
     public OrdersListResponse getAllOrders(Map<String,String> filters) {
+        Sort sortBy = filters.get("sort")!=null ?
+                Objects.equals(filters.get("sort"), "asc") ? Sort.by(Sort.Direction.ASC, "orderNumber"): Sort.by(Sort.Direction.DESC, "orderNumber")
+                :
+                Sort.by(Sort.Direction.ASC, "orderNumber");
+
+        Long orderNumberFilter = filters.get("q")!=null?Long.valueOf(filters.get("q")):null;
+
         OrdersListResponse res = new OrdersListResponse();
-        Pageable pages = PageRequest.of(Integer.parseInt(filters.get("page")),Integer.parseInt(filters.get("limit")), Sort.by(Sort.Direction.DESC, "orderNumber"));
-        res.setOrderList(orderRepository.findAll(pages).getContent());
+        Pageable pages = PageRequest.of(Integer.parseInt(filters.get("page")),Integer.parseInt(filters.get("limit")), sortBy);
+        res.setOrderList(orderRepository.searchByStatusAndOrderNumber(pages, orderNumberFilter,filters.get("status")).getContent());
+        res.setTotalCount(orderRepository.getFilteredTotalCount(orderNumberFilter,filters.get("status")));
         return res;
     }
 

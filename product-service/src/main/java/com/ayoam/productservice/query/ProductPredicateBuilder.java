@@ -8,10 +8,7 @@ import com.querydsl.core.types.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ProductPredicateBuilder {
@@ -59,6 +56,18 @@ public class ProductPredicateBuilder {
         if(filters.get("q")!=null){
             if(!filters.get("q").isEmpty()) {
                 where.and(product.libelle.likeIgnoreCase("%"+filters.get("q")+"%"));
+            }
+        }
+
+        //status filter
+        if(filters.get("status")!=null){
+            if(!filters.get("status").isEmpty()) {
+                if(Objects.equals(filters.get("status"), "draft")) {
+                    where.and(product.active.eq(false));
+                }
+                else{
+                    where.and(product.active.eq(true));
+                }
             }
         }
 

@@ -12,4 +12,8 @@ import java.util.List;
 @AllArgsConstructor
 public class OrdersListResponse {
     private List<Order> orderList;
+    private int totalCount=0;
+    public OrdersListResponse(List<Order> orderList) {
+        this.orderList = orderList;
+    }
 }

@@ -3,12 +3,16 @@ package com.ayoam.orderservice.controller;
 import com.ayoam.orderservice.dto.*;
 import com.ayoam.orderservice.model.Order;
 import com.ayoam.orderservice.service.OrderService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.FileNotFoundException;
 import java.util.Map;
 
 @RestController
@@ -63,4 +67,9 @@ public class OrderController {
         return new ResponseEntity<TotalOrdersAndSalesResponse>(orderService.getTotalOrdersAndSales(),HttpStatus.OK);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','CUSTOMER')")
+    @GetMapping(value = "/invoice/{invoiceId}", produces = {MediaType.APPLICATION_PDF_VALUE})
+    public ResponseEntity<?> generateInvoice(@PathVariable Long invoiceId, HttpServletResponse response) throws JsonProcessingException, FileNotFoundException {
+        return new ResponseEntity<>(orderService.generateInvoice(response,invoiceId),HttpStatus.OK);
+    }
 }
