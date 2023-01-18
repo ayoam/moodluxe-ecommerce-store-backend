@@ -3,8 +3,12 @@ package com.ayoam.emailservice.service;
 import com.ayoam.emailservice.dto.AllContactsResponse;
 import com.ayoam.emailservice.model.Contact;
 import com.ayoam.emailservice.repository.ContactRepository;
+import jakarta.ws.rs.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class ContactService {
@@ -23,5 +27,22 @@ public class ContactService {
         AllContactsResponse res = new AllContactsResponse();
         res.setContactList(contactRepository.findAll());
         return res;
+    }
+
+    public Long getUnreadMessageCount() {
+
+        return contactRepository.countByReadFalse();
+
+    }
+    public List<Contact> getUnreadMessages() {
+        return contactRepository.findByRead(false);
+    }
+    public void markAsRead(Long id) {
+        Contact contact = contactRepository.findById(id).orElseThrow(() -> new NotFoundException("Contact not found"));
+        contact.setRead(true);
+        contactRepository.save(contact);
+    }
+    public void deleteContact(Long id) {
+        contactRepository.deleteById(id);
     }
 }
