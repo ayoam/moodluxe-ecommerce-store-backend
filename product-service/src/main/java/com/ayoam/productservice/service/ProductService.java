@@ -136,7 +136,7 @@ public class ProductService {
         
     }
 
-    public Product updateProduct(ProductDto dto,Long idp) {
+    public Product updateProduct(ProductDto dto,List<MultipartFile> photoList,Long idp) {
         Product product = productRepository.findById(idp).orElse(null);
         if(product==null){
             throw new RuntimeException("invalid product!");
@@ -160,8 +160,24 @@ public class ProductService {
         newModifiedProduct.setCategoryList(catList);
         newModifiedProduct.setBrand(brand);
         newModifiedProduct.setIdp(idp);
-        newModifiedProduct.setPhotoList(product.getPhotoList());
-        return productRepository.save(product);
+        newModifiedProduct.setPhotoList(new ArrayList<>());
+
+        //update photos
+        for(MultipartFile file:photoList){
+            try{
+                byte[] image = Base64.encodeBase64(file.getBytes());
+                String encodedImage = new String(image);
+                Photo photo = new Photo();
+                photo.setExtension(FilenameUtils.getExtension(file.getOriginalFilename()));
+                photo.setPhoto(encodedImage);
+                photo = photoRepository.save(photo);
+                newModifiedProduct.addPhoto(photo);
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return productRepository.save(newModifiedProduct);
 
     }
 

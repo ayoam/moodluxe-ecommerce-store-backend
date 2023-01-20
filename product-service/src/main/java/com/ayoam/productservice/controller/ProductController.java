@@ -6,6 +6,7 @@ import com.ayoam.productservice.model.Category;
 import com.ayoam.productservice.model.Product;
 import com.ayoam.productservice.service.ProductService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
@@ -30,7 +31,7 @@ public class ProductController {
 
     //TODO:add photos section
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping("/products")
+    @PostMapping(value = "/products")
     public ResponseEntity<Product> addProduct(@RequestPart(value = "productInfo",required = false) ProductDto productDto, @RequestPart("photo") List<MultipartFile> photosList){
 //        return new ResponseEntity<Product>(productService.addProduct(productDto),HttpStatus.CREATED);
         return new ResponseEntity<Product>(productService.addProduct(productDto,photosList),HttpStatus.OK);
@@ -45,14 +46,8 @@ public class ProductController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/products/{idp}")
-    public ResponseEntity<?> updateProduct(@RequestBody ProductDto productDto,@PathVariable Long idp){
-        return new ResponseEntity<Product>(productService.updateProduct(productDto,idp),HttpStatus.OK);
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/products/{idp}/updatePhotos")
-    public ResponseEntity<Product> updateProductPhotos(@RequestPart("photo") List<MultipartFile> photosList,@PathVariable Long idp){
-        return new ResponseEntity<Product>(productService.updateProductPhotos(photosList,idp),HttpStatus.OK);
+    public ResponseEntity<?> updateProduct(@PathVariable Long idp,@RequestPart(value = "productInfo",required = false) ProductDto productDto, @RequestPart("photo") List<MultipartFile> photosList){
+        return new ResponseEntity<Product>(productService.updateProduct(productDto,photosList,idp),HttpStatus.OK);
     }
 
     //find product by id
