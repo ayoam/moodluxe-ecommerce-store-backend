@@ -1,12 +1,10 @@
 package com.ayoam.emailservice.model;
 
-import jakarta.persistence.Entity;
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.persistence.Id;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import java.util.Date;
 
 @Data
 @Entity(name="contact")
@@ -18,5 +16,9 @@ public class Contact {
     private String username;
     private String email;
     private String message;
+    private Date date;
+    @Column(name = "read", nullable = false)
+    private boolean read;
+
 
 }
