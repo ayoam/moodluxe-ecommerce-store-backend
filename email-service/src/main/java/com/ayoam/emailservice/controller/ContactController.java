@@ -33,11 +33,7 @@ public class ContactController {
     public Long getUnreadMessageCount() {
         return contactService.getUnreadMessageCount();
     }
-    @GetMapping("/unread-messages")
-    public List<Contact> getUnreadMessages() {
 
-        return contactService.getUnreadMessages();
-    }
     @PutMapping("/{id}/read")
     public ResponseEntity<?> markAsRead(@PathVariable Long id) {
         contactService.markAsRead(id);
