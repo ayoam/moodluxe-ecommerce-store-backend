@@ -20,6 +20,9 @@ import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -62,8 +65,22 @@ public class CustomerService {
         this.jwtDataUtil=jwtDataUtil;
     }
 
-    public getAllCustomersResponse getAllCustomers() {
-        return new getAllCustomersResponse(customerRepository.findAll());
+    public getAllCustomersResponse getAllCustomers(Map<String, String> filters) {
+//        return new getAllCustomersResponse(customerRepository.findAll());
+        Sort sortBy = filters.get("sort")!=null ?
+                Objects.equals(filters.get("sort"), "asc") ? Sort.by(Sort.Direction.ASC, "idc"): Sort.by(Sort.Direction.DESC, "idc")
+                :
+                Sort.by(Sort.Direction.ASC, "idc");
+
+        String nameFilter = filters.get("q")!=null?String.valueOf(filters.get("q")):null;
+
+        getAllCustomersResponse res = new getAllCustomersResponse();
+        Integer page = filters.get("page") != null ? Integer.parseInt(filters.get("page")) : 0;
+        Integer limit = filters.get("limit") != null ? Integer.parseInt(filters.get("limit")) : 10;
+        Pageable pages = PageRequest.of(page, limit, sortBy);
+        res.setCustomerList(customerRepository.searchByName(pages, nameFilter).getContent());
+
+        return res;
     }
 
     public Customer createCustomer(CustomerDto customerDto) {

@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 @RestController()
 @RequestMapping("/customers")
@@ -21,8 +22,8 @@ public class CustomerController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<getAllCustomersResponse> getAllCustomers(){
-        return new ResponseEntity<getAllCustomersResponse>(customerService.getAllCustomers(), HttpStatus.OK);
+    public ResponseEntity<getAllCustomersResponse> getAllCustomers(@RequestParam Map<String,String> filters){
+        return new ResponseEntity<getAllCustomersResponse>(customerService.getAllCustomers(filters), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")

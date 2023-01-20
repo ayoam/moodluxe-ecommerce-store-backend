@@ -12,6 +12,7 @@ import java.util.List;
 public class getAllCustomersResponse {
     @JsonProperty("data")
     private List<Customer> customerList;
+    private int totalCount=0;
     public getAllCustomersResponse(List<Customer> customerList){
         this.customerList=customerList;
     }
