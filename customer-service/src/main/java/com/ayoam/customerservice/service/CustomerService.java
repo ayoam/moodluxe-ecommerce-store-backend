@@ -72,7 +72,7 @@ public class CustomerService {
                 :
                 Sort.by(Sort.Direction.ASC, "idc");
 
-        String nameFilter = filters.get("q")!=null?String.valueOf(filters.get("q")):null;
+        String nameFilter = filters.get("q")!=null?"%"+ filters.get("q") +"%":null;
 
         getAllCustomersResponse res = new getAllCustomersResponse();
         Integer page = filters.get("page") != null ? Integer.parseInt(filters.get("page")) : 0;

@@ -17,8 +17,7 @@ public interface CustomerRepository extends JpaRepository<Customer,Long> {
     @Query(value = "SELECT count(idc) FROM customer ")
     public Long customersTotal();
 
-    @Query(value = "select c from customer c where CONCAT(c.firstName, ' ', c.lastName) like %:nameFilter% or :nameFilter is null")
-
+    @Query(value = "select c from customer c where CONCAT(c.firstName, ' ', c.lastName) like :nameFilter or :nameFilter is null")
     public Page<Customer> searchByName(Pageable pages, @Param("nameFilter") String nameFilter);
 
 }
