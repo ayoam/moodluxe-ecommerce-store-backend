@@ -21,12 +21,15 @@ import java.util.Set;
 public class Product {
     @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
 //    @SequenceGenerator(name="idp_generator",initialValue = 1432485,allocationSize = 1,sequenceName = "product_idp_seq")
+    @GeneratedValue
+            (strategy = GenerationType.SEQUENCE,generator = "product_generator")
+    @SequenceGenerator(name="product_generator", sequenceName = "product_seq",initialValue = 5000,allocationSize=50)
     private Long idp;
     @NotNull
     private String libelle;
     @NotNull
+    @Column(columnDefinition="TEXT")
     private String description;
     @NotNull
     private Double originalPrice;
@@ -35,6 +38,8 @@ public class Product {
     private int quantity;
     @NotNull
     private Boolean active;
+
+    private Long ordersCount=0L;
 
     @ManyToMany
     @JoinTable(name = "product_category",
