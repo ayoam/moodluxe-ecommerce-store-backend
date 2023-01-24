@@ -2,9 +2,11 @@ package com.ayoam.orderservice.service;
 
 import com.ayoam.orderservice.converter.OrderConverter;
 import com.ayoam.orderservice.dto.*;
+import com.ayoam.orderservice.event.OrderPlacedEvent;
 import com.ayoam.orderservice.kafka.publisher.OrderPublisher;
 import com.ayoam.orderservice.model.Invoice;
 import com.ayoam.orderservice.model.Order;
+import com.ayoam.orderservice.model.OrderLineItem;
 import com.ayoam.orderservice.model.OrderStatus;
 import com.ayoam.orderservice.repository.OrderRepository;
 import com.ayoam.orderservice.repository.OrderStatusRepository;
@@ -12,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Iterators;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -52,38 +55,41 @@ public class OrderService {
         Invoice invoice = new Invoice();
         order.setInvoice(invoice);
         order.calculateOrderTotal();
+
+
+        //--------------------check inventory in inventory service ==> WebClient---------------------------------
+
         //orderRequest list
-//        List<OrderRequest> orderRequestList = new ArrayList<>();
-//        for(OrderLineItem item:orderDto.getOrderLineItemList()){
-//            OrderRequest orderRequest = new OrderRequest();
-//            orderRequest.setProductId(item.getProductId());
-//            orderRequest.setQuantity(item.getQuantity());
-//            orderRequestList.add(orderRequest);
-//        }
-
-        //check inventory in inventory service ==> WebClient
-//        InventoryResponse[] result = new InventoryResponse[0];
-//        result = webClientBuiler.build().post()
-//                .uri("http://localhost:8080/api/v1/inventories/checkInventory")
-//                .body(Mono.just(orderRequestList),new ParameterizedTypeReference<List<OrderRequest>>() {})
-//                .retrieve()
-//                .bodyToMono(InventoryResponse[].class)
-//                .block();
-//
-//        Boolean allItemsAvailable = (Arrays.stream(result).allMatch(InventoryResponse::getInStock));
-//        if(!allItemsAvailable){
-//            throw new RuntimeException("some items are not available at the moment!");
-//        }
+        List<OrderRequest> orderRequestList = new ArrayList<>();
+        for(OrderLineItem item:orderDto.getOrderLineItemList()){
+            OrderRequest orderRequest = new OrderRequest();
+            orderRequest.setProductId(item.getProductId());
+            orderRequest.setQuantity(item.getQuantity());
+            orderRequestList.add(orderRequest);
+        }
 
 
-        //send order placed event to inventory service ==> Kafka
-//        OrderPlacedEvent event= new OrderPlacedEvent();
-//        event.setOrderRequestList(orderRequestList);
-//        orderPublisher.placeOrderEvent(event);
+        InventoryResponse[] result = new InventoryResponse[0];
+        result = webClientBuiler.build().post()
+                .uri("http://localhost:8080/api/v1/inventories/checkInventory")
+                .body(Mono.just(orderRequestList),new ParameterizedTypeReference<List<OrderRequest>>() {})
+                .retrieve()
+                .bodyToMono(InventoryResponse[].class)
+                .block();
 
-//        return null;
+        Boolean allItemsAvailable = (Arrays.stream(result).allMatch(InventoryResponse::getInStock));
+        if(!allItemsAvailable){
+            throw new RuntimeException("some items are not available at the moment!");
+        }
 
-        //clear Customer's cart
+
+        //-----------------------send order placed event to inventory service ==> Kafka-----------------------------------------
+        OrderPlacedEvent event= new OrderPlacedEvent();
+        event.setOrderRequestList(orderRequestList);
+        orderPublisher.placeOrderEvent(event);
+
+
+        //-------------------------------clear Customer's cart-----------------------------------------------------------
         try {
             webClientBuiler.build().post()
                     .uri("http://localhost:8080/api/v1/carts/"+orderDto.getCartID()+"/clear")

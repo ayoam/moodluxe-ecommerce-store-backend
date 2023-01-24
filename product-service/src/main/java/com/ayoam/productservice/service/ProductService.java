@@ -53,8 +53,8 @@ public class ProductService {
             switch (filters.get("sort")) {
                 case "nameAsc" -> Sort.by(Sort.Direction.ASC, "libelle");
                 case "nameDesc" -> Sort.by(Sort.Direction.DESC, "libelle");
-                case "priceAsc" -> Sort.by(Sort.Direction.ASC, "originalPrice");
-                case "priceDesc" -> Sort.by(Sort.Direction.DESC, "originalPrice");
+                case "priceAsc" -> Sort.by(Sort.Direction.ASC, "price");
+                case "priceDesc" -> Sort.by(Sort.Direction.DESC, "price");
                 case "asc" -> Sort.by(Sort.Direction.ASC, "idp");
                 case "desc" -> Sort.by(Sort.Direction.DESC, "idp");
                 default -> Sort.by(Sort.Direction.ASC, "idp");

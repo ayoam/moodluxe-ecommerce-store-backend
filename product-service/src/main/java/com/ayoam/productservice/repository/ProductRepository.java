@@ -9,12 +9,12 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, QuerydslPredicateExecutor<Product> {
-    @Query(value = "SELECT FLOOR(min(originalPrice)/100)*100 FROM Product")
+    @Query(value = "SELECT COALESCE(FLOOR(min(price)/100)*100,0) FROM Product")
     public int minPrice();
 
-    @Query(value = "SELECT CEIL(max(originalPrice)/100)*100 FROM Product")
+    @Query(value = "SELECT COALESCE(CEIL(max(price)/100)*100,0) FROM Product")
     public int maxPrice();
 
-    @Query(value = "SELECT count(idp) FROM Product")
+    @Query(value = "SELECT COALESCE(count(idp),0) FROM Product")
     public Long productsTotal();
 }
