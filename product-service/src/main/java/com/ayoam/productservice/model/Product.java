@@ -32,8 +32,8 @@ public class Product {
     @Column(columnDefinition="TEXT")
     private String description;
     @NotNull
-    private Double originalPrice;
-    private Double discountPrice;
+    private Double price;
+    private Double compareToPrice;
     @NotNull
     private int quantity;
     @NotNull

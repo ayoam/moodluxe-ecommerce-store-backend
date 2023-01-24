@@ -40,7 +40,7 @@ public class InventoryService {
             }
 
             inventoryResponse.setProductId(req.getProductId());
-            inventoryResponse.setInStock(req.getQuantity() < product.getQuantity());
+            inventoryResponse.setInStock(req.getQuantity() <= product.getQuantity());
 
             inventoryResponseList.add(inventoryResponse);
         }
