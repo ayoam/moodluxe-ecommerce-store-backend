@@ -48,7 +48,7 @@ public class OrderService {
     public Order placeOrder(OrderDto orderDto) {
         Order order = orderConverter.orderDtoToOrder(orderDto);
         OrderStatus status = orderStatusRepository.findById(orderDto.getStatusId()).orElse(null);
-        if(status==null){
+        if (status == null) {
             throw new RuntimeException("Order status not found!");
         }
         order.setStatus(status);
@@ -57,11 +57,10 @@ public class OrderService {
         order.calculateOrderTotal();
 
 
-        //--------------------check inventory in inventory service ==> WebClient---------------------------------
 
         //orderRequest list
         List<OrderRequest> orderRequestList = new ArrayList<>();
-        for(OrderLineItem item:orderDto.getOrderLineItemList()){
+        for (OrderLineItem item : orderDto.getOrderLineItemList()) {
             OrderRequest orderRequest = new OrderRequest();
             orderRequest.setProductId(item.getProductId());
             orderRequest.setQuantity(item.getQuantity());
@@ -69,30 +68,36 @@ public class OrderService {
         }
 
 
+        //--------------------check inventory in inventory service ==> WebClient---------------------------------
+
         InventoryResponse[] result = new InventoryResponse[0];
         result = webClientBuiler.build().post()
                 .uri("http://localhost:8080/api/v1/inventories/checkInventory")
-                .body(Mono.just(orderRequestList),new ParameterizedTypeReference<List<OrderRequest>>() {})
+                .body(Mono.just(orderRequestList), new ParameterizedTypeReference<List<OrderRequest>>() {
+                })
                 .retrieve()
                 .bodyToMono(InventoryResponse[].class)
                 .block();
 
         Boolean allItemsAvailable = (Arrays.stream(result).allMatch(InventoryResponse::getInStock));
-        if(!allItemsAvailable){
-            throw new RuntimeException("some items are not available at the moment!");
+        if (!allItemsAvailable) {
+            throw new RuntimeException("Some items are not available at the moment , please try again later.");
         }
+
+        //------------------------------------------------------------------------------------------
 
 
         //-----------------------send order placed event to inventory service ==> Kafka-----------------------------------------
-        OrderPlacedEvent event= new OrderPlacedEvent();
+        OrderPlacedEvent event = new OrderPlacedEvent();
         event.setOrderRequestList(orderRequestList);
         orderPublisher.placeOrderEvent(event);
 
+        //--------------------------------------------------------------------------------------------------------------------
 
         //-------------------------------clear Customer's cart-----------------------------------------------------------
         try {
             webClientBuiler.build().post()
-                    .uri("http://localhost:8080/api/v1/carts/"+orderDto.getCartID()+"/clear")
+                    .uri("http://localhost:8080/api/v1/carts/" + orderDto.getCartID() + "/clear")
                     .retrieve()
                     .toEntity(JsonNode.class)
                     .block();
@@ -100,34 +105,36 @@ public class OrderService {
             throw new RuntimeException(e);
         }
 
+        //------------------------------------------------------------------------------------------
+
         return orderRepository.save(order);
     }
 
     public Order updateOrderStatus(OrderStatusRequest orderStatus, Long id) {
         Order order = orderRepository.findById(id).orElse(null);
-        if(order==null){
+        if (order == null) {
             throw new RuntimeException("Order not found!");
         }
         OrderStatus status = orderStatusRepository.findById(orderStatus.getOrderStatusId()).orElse(null);
-        if(status==null){
+        if (status == null) {
             throw new RuntimeException("Order status not found!");
         }
         order.setStatus(status);
         return orderRepository.save(order);
     }
 
-    public OrdersListResponse getAllOrders(Map<String,String> filters) {
-        Sort sortBy = filters.get("sort")!=null ?
-                Objects.equals(filters.get("sort"), "asc") ? Sort.by(Sort.Direction.ASC, "orderNumber"): Sort.by(Sort.Direction.DESC, "orderNumber")
+    public OrdersListResponse getAllOrders(Map<String, String> filters) {
+        Sort sortBy = filters.get("sort") != null ?
+                Objects.equals(filters.get("sort"), "asc") ? Sort.by(Sort.Direction.ASC, "orderNumber") : Sort.by(Sort.Direction.DESC, "orderNumber")
                 :
                 Sort.by(Sort.Direction.ASC, "orderNumber");
 
-        Long orderNumberFilter = filters.get("q")!=null?Long.valueOf(filters.get("q")):null;
+        Long orderNumberFilter = filters.get("q") != null ? Long.valueOf(filters.get("q")) : null;
 
         OrdersListResponse res = new OrdersListResponse();
-        Pageable pages = PageRequest.of(Integer.parseInt(filters.get("page")),Integer.parseInt(filters.get("limit")), sortBy);
-        res.setOrderList(orderRepository.searchByStatusAndOrderNumber(pages, orderNumberFilter,filters.get("status")).getContent());
-        res.setTotalCount(orderRepository.getFilteredTotalCount(orderNumberFilter,filters.get("status")));
+        Pageable pages = PageRequest.of(Integer.parseInt(filters.get("page")), Integer.parseInt(filters.get("limit")), sortBy);
+        res.setOrderList(orderRepository.searchByStatusAndOrderNumber(pages, orderNumberFilter, filters.get("status")).getContent());
+        res.setTotalCount(orderRepository.getFilteredTotalCount(orderNumberFilter, filters.get("status")));
         return res;
     }
 
@@ -140,16 +147,16 @@ public class OrderService {
         return orderRepository.findById(id).orElseThrow();
     }
 
-    public byte[] generateInvoice(HttpServletResponse servletResponse ,Long invoiceId) throws FileNotFoundException,JsonProcessingException {
+    public byte[] generateInvoice(HttpServletResponse servletResponse, Long invoiceId) throws FileNotFoundException, JsonProcessingException {
         InvoiceGenRequest request = new InvoiceGenRequest();
 
         Order order = orderRepository.findByInvoiceInvoiceId(invoiceId).orElse(null);
 
-        if(order==null){
+        if (order == null) {
             throw new RuntimeException("invoiceID invalid!");
         }
 
-        List<InvoiceItem> invoiceItems = order.getOrderLineItemList().stream().map(item->new InvoiceItem(item.getLibelle(),item.getQuantity(),item.getPrice())).toList();
+        List<InvoiceItem> invoiceItems = order.getOrderLineItemList().stream().map(item -> new InvoiceItem(item.getLibelle(), item.getQuantity(), item.getPrice())).toList();
         request.setItems(invoiceItems);
         request.setLogo("https://i.ibb.co/KDng43T/logo.png");
         request.setFrom("Moodluxe \n Leatherwood Rd. \n Livermore, CA 94550 \n United states");
@@ -161,7 +168,7 @@ public class OrderService {
         request.setDate_title("Invoice date");
 
         servletResponse.setContentType("application/pdf");
-        servletResponse.setHeader("Content-Disposition","attachment; filename=\"Invoice #"+invoiceId+".pdf\";");
+        servletResponse.setHeader("Content-Disposition", "attachment; filename=\"Invoice #" + invoiceId + ".pdf\";");
 
         try {
             byte[] response = webClientBuiler.build().post()
@@ -180,9 +187,9 @@ public class OrderService {
     public SalesStatisticsResponse getSalesStatistics() {
         SalesStatisticsResponse response = new SalesStatisticsResponse();
         List<SalesStatistics> salesStatistics = orderRepository.getSalesStatistics();
-        for(int i=1;i<=12;i++){
-            if(!salesStatistics.stream().map(SalesStatistics::getMonth).toList().contains(i)){
-                salesStatistics.add(new SalesStatistics(i,0D));
+        for (int i = 1; i <= 12; i++) {
+            if (!salesStatistics.stream().map(SalesStatistics::getMonth).toList().contains(i)) {
+                salesStatistics.add(new SalesStatistics(i, 0D));
             }
         }
         salesStatistics.sort(Comparator.comparing(SalesStatistics::getMonth));

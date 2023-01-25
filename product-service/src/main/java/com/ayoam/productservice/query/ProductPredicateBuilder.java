@@ -23,7 +23,7 @@ public class ProductPredicateBuilder {
         try{
             if (filters.get("minPrice") != null && filters.get("maxPrice") != null) {
                 if(!filters.get("minPrice").isEmpty() && !filters.get("maxPrice").isEmpty()){
-                    where.and(product.originalPrice.between(Integer.parseInt(filters.get("minPrice")),Integer.parseInt(filters.get("maxPrice"))));
+                    where.and(product.price.between(Integer.parseInt(filters.get("minPrice")),Integer.parseInt(filters.get("maxPrice"))));
                 }
             }
         }
