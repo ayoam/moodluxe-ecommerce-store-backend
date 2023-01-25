@@ -188,6 +188,7 @@ public class ProductService {
                 throw new RuntimeException("product "+order.getProductId()+" doesn't exist!");
             }
             product.setQuantity(product.getQuantity()-order.getQuantity());
+            product.setOrdersCount(product.getOrdersCount()+order.getQuantity());
             productRepository.save(product);
         }
     }
