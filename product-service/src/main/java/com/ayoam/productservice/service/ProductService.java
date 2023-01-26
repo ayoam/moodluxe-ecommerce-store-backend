@@ -22,8 +22,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -235,5 +233,12 @@ public class ProductService {
 
     public Long getProductsTotal() {
         return productRepository.productsTotal();
+    }
+    public List<Product> getTopSellingItems() {
+        List<Product> products = productRepository.findTopSellingItems();
+        if(products.size()>=5)
+            return products.subList(0,5);
+        else
+            return products;
     }
 }

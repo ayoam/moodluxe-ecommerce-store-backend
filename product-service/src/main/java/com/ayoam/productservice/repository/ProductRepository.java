@@ -7,6 +7,8 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, QuerydslPredicateExecutor<Product> {
     @Query(value = "SELECT COALESCE(FLOOR(min(price)/100)*100,0) FROM Product")
@@ -17,4 +19,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, Queryds
 
     @Query(value = "SELECT COALESCE(count(idp),0) FROM Product")
     public Long productsTotal();
+    @Query("SELECT p FROM Product p ORDER BY p.ordersCount DESC")
+    List<Product> findTopSellingItems();
 }
