@@ -2,14 +2,11 @@ package com.ayoam.productservice.controller;
 
 import com.ayoam.productservice.dto.AllProductsResponse;
 import com.ayoam.productservice.dto.ProductDto;
-import com.ayoam.productservice.model.Category;
 import com.ayoam.productservice.model.Product;
 import com.ayoam.productservice.service.ProductService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -61,5 +58,9 @@ public class ProductController {
     public ResponseEntity<Long> getProductsTotal(){
         return new ResponseEntity<Long>(productService.getProductsTotal(),HttpStatus.OK);
     }
-
+    @GetMapping("/products/topSellingItems")
+    public ResponseEntity<List<Product>> getTopSellingItems() {
+        List<Product> products = productService.getTopSellingItems();
+        return new ResponseEntity<>(products, HttpStatus.OK);
+    }
 }
