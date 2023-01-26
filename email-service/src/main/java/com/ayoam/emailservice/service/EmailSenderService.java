@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -22,6 +23,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class EmailSenderService {
+    @Value("${spring.mail.username}")
+    private String emailUsername;
 
     private final JavaMailSender emailSender;
     private final SpringTemplateEngine templateEngine;
@@ -55,7 +58,7 @@ public class EmailSenderService {
     public void sendHtmlMessageTest() throws MessagingException {
         Email email = new Email();
         email.setTo("ayoub.amkhazzou.me@gmail.com");
-        email.setFrom("Moodluxe Store <moodluxe.store@gmail.com>");
+        email.setFrom("Moodluxe Store <"+emailUsername+"@gmail.com>");
         email.setSubject("Welcome Email from Moodluxe");
         email.setTemplate("test-email.html");
         Map<String, Object> properties = new HashMap<>();
