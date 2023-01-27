@@ -33,7 +33,7 @@ public class InventoryConsumer {
 
     @KafkaListener(topics="orderPlacedTopic",properties = {"spring.json.type.mapping=event:com.ayoam.inventoryservice.event.OrderPlacedEvent"},groupId = "orderId")
     public void handleOrderPlaced(OrderPlacedEvent orderPlacedEvent){
-        inventoryService.reserveStock(orderPlacedEvent.getOrderRequestList());
+        inventoryService.reserveStock(orderPlacedEvent.getOrderItemsList());
 //        System.out.println(orderPlacedEvent.getOrderRequestList().get(0).getProductId());
 //        log.info(orderPlacedEvent.getOrderRequestList().get(0).getProductId()+"");
     }

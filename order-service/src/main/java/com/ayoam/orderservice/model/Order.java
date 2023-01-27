@@ -40,6 +40,7 @@ public class Order {
     private Invoice invoice;
     @NotNull
     private Long customerID;
+
     @CreationTimestamp
     @Column(name = "OrderDate", nullable = false, updatable = false)
     private Date OrderDate;

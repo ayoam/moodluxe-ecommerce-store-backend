@@ -1,5 +1,7 @@
 package com.ayoam.emailservice.service;
 
+import com.ayoam.emailservice.event.OrderPlacedEvent;
+import com.ayoam.emailservice.event.OrderStatusChangedEvent;
 import com.ayoam.emailservice.model.Email;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -14,10 +16,12 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -60,12 +64,15 @@ public class EmailSenderService {
         email.setTo("ayoub.amkhazzou.me@gmail.com");
         email.setFrom("Moodluxe Store <"+emailUsername+"@gmail.com>");
         email.setSubject("Welcome Email from Moodluxe");
-        email.setTemplate("test-email.html");
+//        email.setTemplate("test-email.html");
+        email.setTemplate("order-shipped-template.html");
         Map<String, Object> properties = new HashMap<>();
-        properties.put("name", "Ashish");
-        properties.put("subscriptionDate", LocalDate.now().toString());
-        properties.put("technologies", Arrays.asList("Python", "Go", "C#"));
-//        email.setTemplate("order-confirmation.html");
+        properties.put("orderNumber", "#"+"12548");
+        properties.put("orderLink", "http://localhost:3000/orders");
+//        properties.put("name", "Ashish");
+//        properties.put("subscriptionDate", LocalDate.now().toString());
+//        properties.put("technologies", Arrays.asList("Python", "Go", "C#"));
+//        email.setTemplate("order-confirmation-template.html");
 //        properties.put("name", "Elon");
 //        properties.put("orderNumber", "#2599");
 //        properties.put("orderDate", "25 December 2022");
@@ -75,4 +82,52 @@ public class EmailSenderService {
         sendHtmlMessage(email);
     }
 
+    public void sendOrderConfirmationEmail(OrderPlacedEvent orderPlacedEvent) throws MessagingException {
+        Email email = new Email();
+        email.setTo(orderPlacedEvent.getCustomerEmail());
+        email.setFrom("Moodluxe Store <"+emailUsername+"@gmail.com>");
+        email.setSubject("Order Confirmation");
+        email.setTemplate("order-confirmation-template.html");
+        Map<String, Object> properties = new HashMap<>();
+
+        properties.put("name", orderPlacedEvent.getCustomerName());
+        Long orderNumber = orderPlacedEvent.getOrderNumber();
+        properties.put("orderNumber", "#"+orderNumber);
+        String date = DateFormat.getDateInstance(DateFormat.DEFAULT).format(orderPlacedEvent.getOrderDate());
+        properties.put("orderDate", date);
+        properties.put("orderTotal", "$"+orderPlacedEvent.getOrderTotal());
+        properties.put("orderLink", "http://localhost:3000/orders/"+orderNumber);
+
+        email.setProperties(properties);
+        sendHtmlMessage(email);
+    }
+
+
+    public void sendStatusChangedEmail(OrderStatusChangedEvent orderStatusChangedEvent) throws MessagingException {
+        Email email = new Email();
+        Map<String, Object> properties = new HashMap<>();
+        String orderStatus = orderStatusChangedEvent.getOrderStatus();
+        Long orderNumber = orderStatusChangedEvent.getOrderNumber();
+        email.setTo(orderStatusChangedEvent.getCustomerEmail());
+        email.setFrom("Moodluxe Store <"+emailUsername+"@gmail.com>");
+
+        if(Objects.equals(orderStatus, "Shipped")){
+            email.setSubject("Order Shipped");
+            email.setTemplate("order-shipped-template.html");
+            properties.put("orderLink", "http://localhost:3000/orders/"+orderNumber);
+        }
+        else if(Objects.equals(orderStatus, "Delivered")){
+            email.setSubject("Order Delivered");
+            email.setTemplate("order-delivered-template.html");
+            properties.put("allOrdersLink", "http://localhost:3000/myAccount");
+        }
+        else{
+            return;
+        }
+
+        properties.put("orderNumber", "#"+orderNumber);
+
+        email.setProperties(properties);
+        sendHtmlMessage(email);
+    }
 }
