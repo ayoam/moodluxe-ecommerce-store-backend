@@ -59,16 +59,9 @@ public class KeycloakService {
         return response;
     }
 
-    public void deleteKeycloakUser(String email) {
+    public void deleteKeycloakUser(String keycloakId) {
         UsersResource usersResource = kcProvider.getInstance().realm(realm).users();
-        List<UserRepresentation> users = usersResource.search(email);
-
-        if (users.size() > 0) {
-            String userId = users.get(0).getId();
-            usersResource.delete(userId);
-        } else {
-            throw new RuntimeException("User not found!");
-        }
+        usersResource.delete(keycloakId);
     }
 
     private static CredentialRepresentation createPasswordCredentials(String password) {

@@ -162,7 +162,7 @@ public class CustomerService {
             throw new RuntimeException("customer not found!");
         }
         customerRepository.delete(customer);
-        keycloakService.deleteKeycloakUser(customer.getEmail());
+        keycloakService.deleteKeycloakUser(customer.getKeycloakId());
     }
 
     public Customer updateCustomerDetails(CustomerDetailsDto customerDetailsDto, Long id) {
