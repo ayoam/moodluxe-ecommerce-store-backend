@@ -1,6 +1,6 @@
-package com.ayoam.inventoryservice.event;
+package com.ayoam.emailservice.event;
 
-import com.ayoam.inventoryservice.dto.OrderRequest;
+import com.ayoam.emailservice.dto.OrderRequest;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,8 +12,8 @@ import java.util.List;
 public class OrderPlacedEvent {
     private List<OrderRequest> orderItemsList;
     private String customerName;
-    private String customerEmail;
 
+    private String customerEmail;
     private Long orderNumber;
     private Date orderDate;
     private Double orderTotal;

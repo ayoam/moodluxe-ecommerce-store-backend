@@ -22,6 +22,8 @@ public class OrderAdresse {
     @NotNull
     private String lastName;
     @NotNull
+    private String email;
+    @NotNull
     private String city;
     @NotNull
     private int postalCode;

@@ -3,7 +3,9 @@ package com.ayoam.orderservice.service;
 import com.ayoam.orderservice.converter.OrderConverter;
 import com.ayoam.orderservice.dto.*;
 import com.ayoam.orderservice.event.OrderPlacedEvent;
+import com.ayoam.orderservice.event.OrderStatusChangedEvent;
 import com.ayoam.orderservice.kafka.publisher.OrderPublisher;
+import com.ayoam.orderservice.kafka.publisher.OrderStatusPublisher;
 import com.ayoam.orderservice.model.Invoice;
 import com.ayoam.orderservice.model.Order;
 import com.ayoam.orderservice.model.OrderLineItem;
@@ -35,14 +37,16 @@ public class OrderService {
     private OrderStatusRepository orderStatusRepository;
     private WebClient.Builder webClientBuiler;
     private OrderPublisher orderPublisher;
+    private OrderStatusPublisher orderStatusPublisher;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, OrderConverter orderConverter, OrderStatusRepository orderStatusRepository, WebClient.Builder webClientBuiler, OrderPublisher orderPublisher) {
+    public OrderService(OrderRepository orderRepository, OrderConverter orderConverter, OrderStatusRepository orderStatusRepository, WebClient.Builder webClientBuiler, OrderPublisher orderPublisher,OrderStatusPublisher orderStatusPublisher) {
         this.orderRepository = orderRepository;
         this.orderConverter = orderConverter;
         this.orderStatusRepository = orderStatusRepository;
         this.webClientBuiler = webClientBuiler;
         this.orderPublisher = orderPublisher;
+        this.orderStatusPublisher = orderStatusPublisher;
     }
 
     public Order placeOrder(OrderDto orderDto) {
@@ -86,13 +90,21 @@ public class OrderService {
 
         //------------------------------------------------------------------------------------------
 
+        //save order
+        order= orderRepository.save(order);
 
-        //-----------------------send order placed event to inventory service ==> Kafka-----------------------------------------
+        //-----------------------send order placed event to inventory/product service ==> Kafka-----------------------------------------
         OrderPlacedEvent event = new OrderPlacedEvent();
-        event.setOrderRequestList(orderRequestList);
+        event.setOrderItemsList(orderRequestList);
+        event.setOrderNumber(order.getOrderNumber());
+        event.setOrderTotal(order.getOrderTotal());
+        event.setCustomerName(order.getOrderAdresse().getFirstName());
+        event.setOrderDate(order.getOrderDate());
+        event.setCustomerEmail(order.getOrderAdresse().getEmail());
         orderPublisher.placeOrderEvent(event);
 
         //--------------------------------------------------------------------------------------------------------------------
+
 
         //-------------------------------clear Customer's cart-----------------------------------------------------------
         try {
@@ -107,7 +119,7 @@ public class OrderService {
 
         //------------------------------------------------------------------------------------------
 
-        return orderRepository.save(order);
+        return order;
     }
 
     public Order updateOrderStatus(OrderStatusRequest orderStatus, Long id) {
@@ -120,6 +132,15 @@ public class OrderService {
             throw new RuntimeException("Order status not found!");
         }
         order.setStatus(status);
+
+        //-----------------------send order status changed event to email service ==> Kafka-----------------------------------------
+        OrderStatusChangedEvent event = new OrderStatusChangedEvent();
+        event.setOrderStatus(status.getStatus());
+        event.setOrderNumber(order.getOrderNumber());
+        event.setCustomerEmail(order.getOrderAdresse().getEmail());
+        orderStatusPublisher.sendStatusChangedEmailEvent(event);
+        //--------------------------------------------------------------------------------------------------------------------------
+
         return orderRepository.save(order);
     }
 
