@@ -59,6 +59,10 @@ public class KeycloakService {
         return response;
     }
 
+    public void deleteKeycloakUser(String keycloakId) {
+        UsersResource usersResource = kcProvider.getInstance().realm(realm).users();
+        usersResource.delete(keycloakId);
+    }
 
     private static CredentialRepresentation createPasswordCredentials(String password) {
         CredentialRepresentation passwordCredentials = new CredentialRepresentation();
