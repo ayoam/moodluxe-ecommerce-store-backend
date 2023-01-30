@@ -90,6 +90,13 @@ public class KeycloakService {
         user.resetPassword(credentialRepresentation);
     }
 
+    public void setEmailVerified(String keycloakId){
+        UserResource user=  kcProvider.getInstance().realm(realm).users().get(keycloakId);
+        UserRepresentation userRepresentation = user.toRepresentation();
+        userRepresentation.setEmailVerified(true);
+        user.update(userRepresentation);
+    }
+
     public void sendForgotPasswordEmail(String email){
         UsersResource usersResource = kcProvider.getInstance().realm(realm).users();
         if(usersResource.search(email).stream().count()>0){

@@ -1,6 +1,7 @@
 package com.ayoam.emailservice.kafka.consumer;
 
 
+import com.ayoam.emailservice.event.CustomerRegisteredEvent;
 import com.ayoam.emailservice.event.OrderPlacedEvent;
 import com.ayoam.emailservice.event.OrderStatusChangedEvent;
 import com.ayoam.emailservice.service.EmailSenderService;
@@ -30,5 +31,11 @@ public class emailConsumer {
     public void handleSendStatusChangedEmail(OrderStatusChangedEvent orderStatusChangedEvent) throws MessagingException {
 //        log.info("received notification :  "+orderStatusChangedEvent.getOrderStatus());
         emailSenderService.sendStatusChangedEmail(orderStatusChangedEvent);
+    }
+
+    @KafkaListener(topics = "customerRegisteredTopic")
+    public void handleSendEmailConfirmation(CustomerRegisteredEvent customerRegisteredEvent) throws MessagingException {
+//        log.info("received notification :  "+customerRegisteredEvent.getConfirmationToken());
+        emailSenderService.sendEmailConfirmation(customerRegisteredEvent);
     }
 }
