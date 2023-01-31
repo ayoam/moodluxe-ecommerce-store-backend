@@ -54,7 +54,7 @@ public class KeycloakService {
 
         String userId = usersResource.search(user.getEmail()).get(0).getId();
 //        System.out.println(userId);
-        usersResource.get(userId).sendVerifyEmail();
+//        usersResource.get(userId).sendVerifyEmail();
 //        usersResource.get(userId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
         return response;
     }
@@ -94,6 +94,7 @@ public class KeycloakService {
         UserResource user=  kcProvider.getInstance().realm(realm).users().get(keycloakId);
         UserRepresentation userRepresentation = user.toRepresentation();
         userRepresentation.setEmailVerified(true);
+        if(userRepresentation.isEmailVerified()) return ;
         user.update(userRepresentation);
     }
 
@@ -102,7 +103,6 @@ public class KeycloakService {
         if(usersResource.search(email).stream().count()>0){
             String userId = usersResource.search(email).get(0).getId();
             usersResource.get(userId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
-//            usersResource.get(userId).sendVerifyEmail();
         }
     }
 
