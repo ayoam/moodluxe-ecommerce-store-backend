@@ -54,4 +54,9 @@ public class AuthController {
     }
 
 
+    @PostMapping("/confirm-email/{confirmToken}")
+    public ResponseEntity<?> confirmEmail(@PathVariable String confirmToken){
+        return new ResponseEntity<>(customerService.confirmEmail(confirmToken));
+    }
+
 }

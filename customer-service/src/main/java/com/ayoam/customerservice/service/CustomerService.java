@@ -3,10 +3,10 @@ package com.ayoam.customerservice.service;
 import com.ayoam.customerservice.converter.AdresseConverter;
 import com.ayoam.customerservice.converter.CustomerConverter;
 import com.ayoam.customerservice.dto.*;
-import com.ayoam.customerservice.model.Country;
-import com.ayoam.customerservice.model.Customer;
-import com.ayoam.customerservice.model.CustomerAdresse;
-import com.ayoam.customerservice.model.UserInfo;
+import com.ayoam.customerservice.event.CustomerRegisteredEvent;
+import com.ayoam.customerservice.kafka.publisher.CustomerPublisher;
+import com.ayoam.customerservice.model.*;
+import com.ayoam.customerservice.repository.ConfirmationTokenRepository;
 import com.ayoam.customerservice.repository.CountryRepository;
 import com.ayoam.customerservice.repository.CustomerAdresseRepository;
 import com.ayoam.customerservice.repository.CustomerRepository;
@@ -14,8 +14,6 @@ import com.ayoam.customerservice.utils.JwtDataUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.mashape.unirest.http.exceptions.UnirestException;
-import lombok.extern.java.Log;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -41,9 +40,11 @@ public class CustomerService {
     private CustomerRepository customerRepository;
     private CustomerConverter customerConverter;
     private AdresseConverter adresseConverter;
+    private CustomerPublisher customerPublisher;
 
     private WebClient.Builder webClientBuiler;
     private CustomerAdresseRepository customerAdresseRepository;
+    private ConfirmationTokenRepository confirmationTokenRepository;
     private CountryRepository countryRepository;
 
     private KeycloakService keycloakService;
@@ -54,7 +55,7 @@ public class CustomerService {
     private String cart_service_url;
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, CustomerConverter customerConverter, AdresseConverter adresseConverter, WebClient.Builder webClientBuiler, CustomerAdresseRepository customerAdresseRepository, CountryRepository countryRepository, KeycloakService keycloakAdminClientService,JwtDataUtil jwtDataUtil) {
+    public CustomerService(CustomerRepository customerRepository, CustomerConverter customerConverter, AdresseConverter adresseConverter, WebClient.Builder webClientBuiler, CustomerAdresseRepository customerAdresseRepository, CountryRepository countryRepository, KeycloakService keycloakAdminClientService,JwtDataUtil jwtDataUtil,ConfirmationTokenRepository confirmationTokenRepository,CustomerPublisher customerPublisher) {
         this.customerRepository = customerRepository;
         this.customerConverter = customerConverter;
         this.adresseConverter = adresseConverter;
@@ -63,6 +64,8 @@ public class CustomerService {
         this.countryRepository = countryRepository;
         this.keycloakService = keycloakAdminClientService;
         this.jwtDataUtil=jwtDataUtil;
+        this.confirmationTokenRepository=confirmationTokenRepository;
+        this.customerPublisher=customerPublisher;
     }
 
     public getAllCustomersResponse getAllCustomers(Map<String, String> filters) {
@@ -121,8 +124,22 @@ public class CustomerService {
                 .block();
 
         customer.setCartId(result.getCartId());
+        customer = customerRepository.save(customer);
 
-        return customerRepository.save(customer);
+        //create email confirmation token
+        ConfirmationToken confirmationToken = new ConfirmationToken(customer);
+        confirmationTokenRepository.save(confirmationToken);
+
+        //---------------send email confirmation event => kafka---------------------
+        CustomerRegisteredEvent event = new CustomerRegisteredEvent();
+        event.setEmail(customer.getEmail());
+        event.setFullName(customer.getFirstName()+" "+customer.getLastName());
+        event.setConfirmationToken(confirmationToken.getConfirmationToken());
+
+        customerPublisher.sendConfirmationEmailEvent(event);
+        //---------------------------------------------------------------------------
+
+        return customer;
     }
 
     public void checkEmailAdresse(CheckEmailRequest emailRequest){
@@ -161,6 +178,8 @@ public class CustomerService {
         if(customer==null){
             throw new RuntimeException("customer not found!");
         }
+        ConfirmationToken ct = confirmationTokenRepository.findByCustomer(customer);
+        confirmationTokenRepository.delete(ct);
         customerRepository.delete(customer);
         keycloakService.deleteKeycloakUser(customer.getKeycloakId());
     }
@@ -293,5 +312,22 @@ public class CustomerService {
 
     public Long getCustomersTotal() {
         return customerRepository.customersTotal();
+    }
+
+    public HttpStatus confirmEmail(String confirmToken) {
+        ConfirmationToken ct = confirmationTokenRepository.findByConfirmationToken(confirmToken);
+        if(ct==null){
+            return HttpStatus.NOT_FOUND;
+        }
+
+        Boolean tokenExpired = TimeUnit.MILLISECONDS.toMinutes((new Date()).getTime()-ct.getCreatedDate().getTime()) > 15;
+        if(tokenExpired){
+            throw new RuntimeException("Link expired!");
+        }
+
+        keycloakService.setEmailVerified(ct.getCustomer().getKeycloakId());
+        confirmationTokenRepository.delete(ct);
+
+        return HttpStatus.OK;
     }
 }
