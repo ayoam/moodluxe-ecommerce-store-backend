@@ -326,7 +326,7 @@ public class CustomerService {
         }
 
         keycloakService.setEmailVerified(ct.getCustomer().getKeycloakId());
-        confirmationTokenRepository.delete(ct);
+//        confirmationTokenRepository.delete(ct);
 
         return HttpStatus.OK;
     }
