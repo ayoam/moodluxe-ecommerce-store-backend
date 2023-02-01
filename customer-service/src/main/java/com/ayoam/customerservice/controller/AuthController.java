@@ -56,7 +56,12 @@ public class AuthController {
 
     @PostMapping("/confirm-email/{confirmToken}")
     public ResponseEntity<?> confirmEmail(@PathVariable String confirmToken){
-        return new ResponseEntity<>(customerService.confirmEmail(confirmToken));
+        return customerService.confirmEmail(confirmToken);
     }
 
+    @PostMapping("/resend-confirmation-email/{keycloakID}")
+    public ResponseEntity<?> resendConfirmationEmail(@PathVariable String keycloakID){
+        customerService.resendEmailConfirmation(keycloakID);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

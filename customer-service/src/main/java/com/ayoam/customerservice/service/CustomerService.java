@@ -14,6 +14,8 @@ import com.ayoam.customerservice.utils.JwtDataUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.tomcat.util.json.JSONParser;
+import org.json.JSONObject;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +36,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.keycloak.util.JsonSerialization.mapper;
 
 @Service
 public class CustomerService {
@@ -130,14 +134,8 @@ public class CustomerService {
         ConfirmationToken confirmationToken = new ConfirmationToken(customer);
         confirmationTokenRepository.save(confirmationToken);
 
-        //---------------send email confirmation event => kafka---------------------
-        CustomerRegisteredEvent event = new CustomerRegisteredEvent();
-        event.setEmail(customer.getEmail());
-        event.setFullName(customer.getFirstName()+" "+customer.getLastName());
-        event.setConfirmationToken(confirmationToken.getConfirmationToken());
+        sendEmailConfirmationEvent(customer,confirmationToken);
 
-        customerPublisher.sendConfirmationEmailEvent(event);
-        //---------------------------------------------------------------------------
 
         return customer;
     }
@@ -314,20 +312,50 @@ public class CustomerService {
         return customerRepository.customersTotal();
     }
 
-    public HttpStatus confirmEmail(String confirmToken) {
+    public ResponseEntity<?> confirmEmail(String confirmToken) {
         ConfirmationToken ct = confirmationTokenRepository.findByConfirmationToken(confirmToken);
         if(ct==null){
-            return HttpStatus.NOT_FOUND;
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
         Boolean tokenExpired = TimeUnit.MILLISECONDS.toMinutes((new Date()).getTime()-ct.getCreatedDate().getTime()) > 15;
         if(tokenExpired){
-            throw new RuntimeException("Link expired!");
+            ObjectNode objectNode = mapper.createObjectNode();
+            objectNode.put("message", "Link expired!");
+            objectNode.put("email", ct.getCustomer().getKeycloakId());
+
+            return new ResponseEntity<>(objectNode, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         keycloakService.setEmailVerified(ct.getCustomer().getKeycloakId());
 //        confirmationTokenRepository.delete(ct);
 
-        return HttpStatus.OK;
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public void resendEmailConfirmation(String keycloakID) {
+        Customer customer = customerRepository.findByKeycloakId(keycloakID).orElse(null);
+        if(customer ==null) throw  new RuntimeException("Customer not found");
+
+        //delete old confirmation token
+        ConfirmationToken ct = confirmationTokenRepository.findByCustomer(customer);
+        if(ct!=null) confirmationTokenRepository.delete(ct);
+
+        //create email confirmation token
+        ConfirmationToken newct = new ConfirmationToken(customer);
+        confirmationTokenRepository.save(newct);
+
+        sendEmailConfirmationEvent(customer,newct);
+
+    }
+
+    private void sendEmailConfirmationEvent(Customer customer,ConfirmationToken ct){
+        //---------------send email confirmation event => kafka---------------------
+        CustomerRegisteredEvent event = new CustomerRegisteredEvent();
+        event.setEmail(customer.getEmail());
+        event.setFullName(customer.getFirstName()+" "+customer.getLastName());
+        event.setConfirmationToken(ct.getConfirmationToken());
+
+        customerPublisher.sendConfirmationEmailEvent(event);
     }
 }
