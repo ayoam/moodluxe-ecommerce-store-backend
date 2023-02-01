@@ -64,4 +64,9 @@ public class AuthController {
         customerService.resendEmailConfirmation(keycloakID);
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @PutMapping("/reset-password/{token}")
+    public ResponseEntity<?> resetPassword(@PathVariable String token,@RequestBody PasswordResetRequest passwordResetRequest){
+        return customerService.resetPassword(token,passwordResetRequest);
+    }
 }

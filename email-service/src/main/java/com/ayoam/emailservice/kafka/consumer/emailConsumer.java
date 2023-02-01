@@ -2,6 +2,7 @@ package com.ayoam.emailservice.kafka.consumer;
 
 
 import com.ayoam.emailservice.event.CustomerRegisteredEvent;
+import com.ayoam.emailservice.event.ForgotPasswordEvent;
 import com.ayoam.emailservice.event.OrderPlacedEvent;
 import com.ayoam.emailservice.event.OrderStatusChangedEvent;
 import com.ayoam.emailservice.service.EmailSenderService;
@@ -37,5 +38,11 @@ public class emailConsumer {
     public void handleSendEmailConfirmation(CustomerRegisteredEvent customerRegisteredEvent) throws MessagingException {
 //        log.info("received notification :  "+customerRegisteredEvent.getConfirmationToken());
         emailSenderService.sendEmailConfirmation(customerRegisteredEvent);
+    }
+
+    @KafkaListener(topics = "forgotPasswordTopic")
+    public void handleSendPasswordResetEmail(ForgotPasswordEvent forgotPasswordEvent) throws MessagingException {
+//        log.info("received notification :  "+forgotPasswordEvent.getResetPasswordToken());
+        emailSenderService.sendPasswordResetEmail(forgotPasswordEvent);
     }
 }
