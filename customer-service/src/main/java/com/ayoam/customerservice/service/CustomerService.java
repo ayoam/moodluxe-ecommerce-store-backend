@@ -4,12 +4,10 @@ import com.ayoam.customerservice.converter.AdresseConverter;
 import com.ayoam.customerservice.converter.CustomerConverter;
 import com.ayoam.customerservice.dto.*;
 import com.ayoam.customerservice.event.CustomerRegisteredEvent;
+import com.ayoam.customerservice.event.ForgotPasswordEvent;
 import com.ayoam.customerservice.kafka.publisher.CustomerPublisher;
 import com.ayoam.customerservice.model.*;
-import com.ayoam.customerservice.repository.ConfirmationTokenRepository;
-import com.ayoam.customerservice.repository.CountryRepository;
-import com.ayoam.customerservice.repository.CustomerAdresseRepository;
-import com.ayoam.customerservice.repository.CustomerRepository;
+import com.ayoam.customerservice.repository.*;
 import com.ayoam.customerservice.utils.JwtDataUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
@@ -49,6 +48,7 @@ public class CustomerService {
     private WebClient.Builder webClientBuiler;
     private CustomerAdresseRepository customerAdresseRepository;
     private ConfirmationTokenRepository confirmationTokenRepository;
+    private PasswordResetTokenRepository passwordResetTokenRepository;
     private CountryRepository countryRepository;
 
     private KeycloakService keycloakService;
@@ -59,7 +59,7 @@ public class CustomerService {
     private String cart_service_url;
 
     @Autowired
-    public CustomerService(CustomerRepository customerRepository, CustomerConverter customerConverter, AdresseConverter adresseConverter, WebClient.Builder webClientBuiler, CustomerAdresseRepository customerAdresseRepository, CountryRepository countryRepository, KeycloakService keycloakAdminClientService,JwtDataUtil jwtDataUtil,ConfirmationTokenRepository confirmationTokenRepository,CustomerPublisher customerPublisher) {
+    public CustomerService(CustomerRepository customerRepository, CustomerConverter customerConverter, AdresseConverter adresseConverter, WebClient.Builder webClientBuiler, CustomerAdresseRepository customerAdresseRepository, CountryRepository countryRepository, KeycloakService keycloakAdminClientService,JwtDataUtil jwtDataUtil,ConfirmationTokenRepository confirmationTokenRepository,CustomerPublisher customerPublisher,PasswordResetTokenRepository passwordResetTokenRepository) {
         this.customerRepository = customerRepository;
         this.customerConverter = customerConverter;
         this.adresseConverter = adresseConverter;
@@ -70,6 +70,7 @@ public class CustomerService {
         this.jwtDataUtil=jwtDataUtil;
         this.confirmationTokenRepository=confirmationTokenRepository;
         this.customerPublisher=customerPublisher;
+        this.passwordResetTokenRepository=passwordResetTokenRepository;
     }
 
     public getAllCustomersResponse getAllCustomers(Map<String, String> filters) {
@@ -249,7 +250,18 @@ public class CustomerService {
     }
 
     public void forgotPasswordHandler(ForgotPasswordRequest forgotPasswordRequest) {
-        keycloakService.sendForgotPasswordEmail(forgotPasswordRequest.getEmail());
+//        keycloakService.sendForgotPasswordEmail(forgotPasswordRequest.getEmail());
+        Customer customer = customerRepository.findByEmailIgnoreCase(forgotPasswordRequest.getEmail()).orElse(null);
+        if(customer==null) return;
+        PasswordResetToken prt = new PasswordResetToken(customer);
+        passwordResetTokenRepository.save(prt);
+
+        //----------------send forgot password email=>kafka----------------------
+        ForgotPasswordEvent event = new ForgotPasswordEvent();
+        event.setEmail(customer.getEmail());
+        event.setResetPasswordToken(prt.getPasswordResetToken());
+
+        customerPublisher.sendForgotPasswordEmailEvent(event);
     }
 
     public ResponseEntity<?> checkEmailExistance(String email){
@@ -357,5 +369,28 @@ public class CustomerService {
         event.setConfirmationToken(ct.getConfirmationToken());
 
         customerPublisher.sendConfirmationEmailEvent(event);
+    }
+
+    public ResponseEntity<?> resetPassword(String token,PasswordResetRequest passwordResetRequest) {
+        String newPassword = passwordResetRequest.getNewPassword();
+        PasswordResetToken prt = passwordResetTokenRepository.findByPasswordResetToken(token);
+        System.out.println(prt);
+
+        if(prt==null) {return new ResponseEntity<>(HttpStatus.NOT_FOUND);}
+
+        Boolean tokenExpired = TimeUnit.MILLISECONDS.toMinutes((new Date()).getTime()-prt.getCreatedDate().getTime()) > 15;
+        if(tokenExpired){
+            ObjectNode objectNode = mapper.createObjectNode();
+            objectNode.put("message", "Link expired!");
+            return new ResponseEntity<>(objectNode, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        //reset password
+        keycloakService.updateUserPassword(prt.getCustomer().getKeycloakId(),newPassword);
+
+        //delete token
+        passwordResetTokenRepository.delete(prt);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

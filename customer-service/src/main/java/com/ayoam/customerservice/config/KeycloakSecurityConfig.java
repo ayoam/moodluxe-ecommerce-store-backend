@@ -67,6 +67,7 @@ public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
                 .antMatchers("/auth/refreshToken").permitAll()
                 .antMatchers("/auth/confirm-email/**").permitAll()
                 .antMatchers("/auth/resend-confirmation-email/**").permitAll()
+                .antMatchers("/auth/reset-password/**").permitAll()
                 .antMatchers("/countries").permitAll()
                 .anyRequest().authenticated();
     }

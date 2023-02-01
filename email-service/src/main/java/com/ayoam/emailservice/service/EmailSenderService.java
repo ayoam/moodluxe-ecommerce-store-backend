@@ -1,6 +1,7 @@
 package com.ayoam.emailservice.service;
 
 import com.ayoam.emailservice.event.CustomerRegisteredEvent;
+import com.ayoam.emailservice.event.ForgotPasswordEvent;
 import com.ayoam.emailservice.event.OrderPlacedEvent;
 import com.ayoam.emailservice.event.OrderStatusChangedEvent;
 import com.ayoam.emailservice.model.Email;
@@ -142,6 +143,20 @@ public class EmailSenderService {
 
         properties.put("fullName", customerRegisteredEvent.getFullName());
         properties.put("verificationLink", "http://localhost:3000/confirm-account?token="+customerRegisteredEvent.getConfirmationToken());
+
+        email.setProperties(properties);
+        sendHtmlMessage(email);
+    }
+
+    public void sendPasswordResetEmail(ForgotPasswordEvent forgotPasswordEvent) throws MessagingException {
+        Email email = new Email();
+        email.setTo(forgotPasswordEvent.getEmail());
+        email.setFrom("Moodluxe Store <"+emailUsername+"@gmail.com>");
+        email.setSubject("Password reset");
+        email.setTemplate("forgot-password-template.html");
+        Map<String, Object> properties = new HashMap<>();
+
+        properties.put("resetLink", "http://localhost:3000/password-reset?token="+forgotPasswordEvent.getResetPasswordToken());
 
         email.setProperties(properties);
         sendHtmlMessage(email);
