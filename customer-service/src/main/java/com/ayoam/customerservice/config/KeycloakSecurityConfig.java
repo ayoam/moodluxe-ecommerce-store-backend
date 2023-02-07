@@ -1,12 +1,10 @@
 package com.ayoam.customerservice.config;
 
 import org.keycloak.KeycloakPrincipal;
-import org.keycloak.adapters.KeycloakConfigResolver;
 import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
 import org.keycloak.adapters.springsecurity.account.KeycloakRole;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
-import org.keycloak.adapters.springboot.KeycloakSpringBootConfigResolver;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -31,8 +29,7 @@ import java.util.List;
 @KeycloakConfiguration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 
-public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
-{
+public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
@@ -51,24 +48,25 @@ public class KeycloakSecurityConfig extends KeycloakWebSecurityConfigurerAdapter
     }
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception
-    {
+    protected void configure(HttpSecurity http) throws Exception {
         super.configure(http);
-            http
+        http
                 .cors()
                 .and()
                 .csrf()
                 .disable()
                 .authorizeRequests()
-                .antMatchers("/auth/login").permitAll()
-                .antMatchers("/auth/register").permitAll()
-                .antMatchers("/auth/forgotPassword").permitAll()
-                .antMatchers("/auth/check-email/**").permitAll()
-                .antMatchers("/auth/refreshToken").permitAll()
-                .antMatchers("/auth/confirm-email/**").permitAll()
-                .antMatchers("/auth/resend-confirmation-email/**").permitAll()
-                .antMatchers("/auth/reset-password/**").permitAll()
+                .antMatchers("/auth/**").permitAll()
+//                .antMatchers("/auth/register").permitAll()
+//                .antMatchers("/auth/forgotPassword").permitAll()
+//                .antMatchers("/auth/check-email/**").permitAll()
+//                .antMatchers("/auth/refreshToken").permitAll()
+//                .antMatchers("/auth/confirm-email/**").permitAll()
+//                .antMatchers("/auth/resend-confirmation-email/**").permitAll()
+//                .antMatchers("/auth/password-reset/**").permitAll()
+//                .antMatchers("/auth/check-password-reset-token/**").permitAll()
                 .antMatchers("/countries").permitAll()
+                .antMatchers("/auth/updatePassword").authenticated()
                 .anyRequest().authenticated();
     }
 

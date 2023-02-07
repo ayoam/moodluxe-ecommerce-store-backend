@@ -334,7 +334,7 @@ public class CustomerService {
         if(tokenExpired){
             ObjectNode objectNode = mapper.createObjectNode();
             objectNode.put("message", "Link expired!");
-            objectNode.put("email", ct.getCustomer().getKeycloakId());
+            objectNode.put("keycloakID", ct.getCustomer().getKeycloakId());
 
             return new ResponseEntity<>(objectNode, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -390,6 +390,41 @@ public class CustomerService {
 
         //delete token
         passwordResetTokenRepository.delete(prt);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> checkPasswordResetToken(String token) {
+        PasswordResetToken prt = passwordResetTokenRepository.findByPasswordResetToken(token);
+        if(prt==null) {return new ResponseEntity<>(HttpStatus.NOT_FOUND);}
+
+        Boolean tokenExpired = TimeUnit.MILLISECONDS.toMinutes((new Date()).getTime()-prt.getCreatedDate().getTime()) > 15;
+        if(tokenExpired){
+            ObjectNode objectNode = mapper.createObjectNode();
+            objectNode.put("message", "Link expired!");
+            return new ResponseEntity<>(objectNode, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> resendPasswordResetEmail(String token) {
+        PasswordResetToken prt = passwordResetTokenRepository.findByPasswordResetToken(token);
+        if(prt==null) {return new ResponseEntity<>(HttpStatus.NOT_FOUND);}
+
+        Customer customer = prt.getCustomer();
+
+        //delete old confirmation token
+        if(prt!=null) passwordResetTokenRepository.delete(prt);
+
+        //create email confirmation token
+        PasswordResetToken newprt = new PasswordResetToken(customer);
+        passwordResetTokenRepository.save(newprt);
+
+        //----------------resend forgot password email=>kafka----------------------
+        ForgotPasswordEvent event = new ForgotPasswordEvent();
+        event.setEmail(prt.getCustomer().getEmail());
+        event.setResetPasswordToken(newprt.getPasswordResetToken());
+        customerPublisher.sendForgotPasswordEmailEvent(event);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
