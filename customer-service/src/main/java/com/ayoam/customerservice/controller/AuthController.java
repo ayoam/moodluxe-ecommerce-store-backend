@@ -65,8 +65,18 @@ public class AuthController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @PutMapping("/reset-password/{token}")
+    @PutMapping("/password-reset/{token}")
     public ResponseEntity<?> resetPassword(@PathVariable String token,@RequestBody PasswordResetRequest passwordResetRequest){
         return customerService.resetPassword(token,passwordResetRequest);
+    }
+
+    @PostMapping("/check-password-reset-token/{token}")
+    public ResponseEntity<?> checkPasswordResetToken(@PathVariable String token){
+        return customerService.checkPasswordResetToken(token);
+    }
+
+    @PostMapping("/resend-password-reset-email/{token}")
+    public ResponseEntity<?> resendPasswordResetEmail(@PathVariable String token){
+        return customerService.resendPasswordResetEmail(token);
     }
 }
