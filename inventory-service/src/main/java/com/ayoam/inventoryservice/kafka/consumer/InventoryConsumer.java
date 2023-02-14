@@ -31,7 +31,7 @@ public class InventoryConsumer {
         inventoryService.deleteInventory(productStockChangedEvent);
     }
 
-    @KafkaListener(topics="orderPlacedTopic",properties = {"spring.json.type.mapping=event:com.ayoam.inventoryservice.event.OrderPlacedEvent"},groupId = "orderId")
+    @KafkaListener(topics="orderPlacedTopic")
     public void handleOrderPlaced(OrderPlacedEvent orderPlacedEvent){
         inventoryService.reserveStock(orderPlacedEvent.getOrderItemsList());
 //        System.out.println(orderPlacedEvent.getOrderRequestList().get(0).getProductId());
