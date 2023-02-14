@@ -177,8 +177,10 @@ public class CustomerService {
         if(customer==null){
             throw new RuntimeException("customer not found!");
         }
-        ConfirmationToken ct = confirmationTokenRepository.findByCustomer(customer);
-        confirmationTokenRepository.delete(ct);
+        List<ConfirmationToken> ct = confirmationTokenRepository.findAllByCustomer(customer);
+        List<PasswordResetToken> prt = passwordResetTokenRepository.findAllByCustomer(customer);
+        if(ct!=null)confirmationTokenRepository.deleteAll(ct);
+        if(prt!=null)passwordResetTokenRepository.deleteAll(prt);
         customerRepository.delete(customer);
         keycloakService.deleteKeycloakUser(customer.getKeycloakId());
     }
